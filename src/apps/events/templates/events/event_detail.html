@@ -1,0 +1,89 @@
+{% extends 'platform_base.html' %}
+
+{% block platform_content %}
+
+    <section class="space-y-4">
+        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+                <h1 class="text-2xl font-bold">{{ event.name }}</h1>
+                <p class="text-sm text-base-content/70">
+                    Edicao {{ event.edition }} · {{ event.year }}
+                </p>
+            </div>
+
+            <a href="{% url 'event_list' %}" class="btn btn-ghost">Voltar</a>
+        </div>
+
+        <div class="bg-base-100 border border-base-300 rounded-lg p-6 shadow-sm space-y-4">
+            <div class="grid gap-4 md:grid-cols-3 text-sm">
+                <div class="space-y-1">
+                    <p class="text-base-content/70">Submissao</p>
+                    <p class="font-medium">
+                        {{ event.submission_period_start|date:"d/m/Y H:i" }}
+                        -
+                        {{ event.submission_period_end|date:"d/m/Y H:i" }}
+                    </p>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-base-content/70">Avaliacao</p>
+                    <p class="font-medium">
+                        {{ event.evaluation_period_start|date:"d/m/Y H:i" }}
+                        -
+                        {{ event.evaluation_period_end|date:"d/m/Y H:i" }}
+                    </p>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-base-content/70">Resultados</p>
+                    <p class="font-medium">
+                        {{ event.results_publication_date|date:"d/m/Y H:i" }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="divider my-0"></div>
+
+            <div class="grid gap-4 md:grid-cols-2 text-sm">
+                <div>
+                    <p class="text-base-content/70">Instituicao organizadora</p>
+                    <p class="font-medium">{{ event.organizing_institution }}</p>
+                </div>
+                <div>
+                    <p class="text-base-content/70">Contato da organizacao</p>
+                    <p class="font-medium">{{ event.contact_email }}</p>
+                </div>
+            </div>
+
+            {% if event.submission_rules %}
+
+                <div class="divider my-0"></div>
+
+                <div class="space-y-2">
+                    <h2 class="text-base font-semibold">Regras gerais de submissao</h2>
+                    <p class="text-sm text-base-content/70 whitespace-pre-line">
+                        {{ event.submission_rules }}
+                    </p>
+                </div>
+
+            {% endif %}
+
+            <div class="divider my-0"></div>
+
+            <div class="text-sm">
+                <p class="text-base-content/70">Revisao cega</p>
+                <p class="font-medium">
+
+                    {% if event.blind_review %}
+
+                        Ativada
+
+                    {% else %}
+
+                        Desativada
+
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </section>
+
+{% endblock platform_content %}

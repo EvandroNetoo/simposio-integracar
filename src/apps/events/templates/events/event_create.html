@@ -1,0 +1,60 @@
+{% extends 'platform_base.html' %}
+
+{% block platform_content %}
+
+    <section class="space-y-4">
+        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+                <h1 class="text-2xl font-bold">Adicionar Evento</h1>
+                <p class="text-sm text-base-content/70">
+                    Preencha os dados para criar um novo evento.
+                </p>
+            </div>
+        </div>
+
+        <div class="card bg-base-100 border border-base-300 shadow-sm overflow-hidden">
+
+            <div class="card-body">
+
+                <form method="post" class="space-y-6">
+                    {% csrf_token %}
+                    <div class="divider">Informações Gerais</div>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <c-django-form.field :field="form.name" />
+                        <c-django-form.field :field="form.edition" />
+                        <c-django-form.field :field="form.year" />
+                        <c-django-form.field :field="form.organizing_institution" />
+                    </div>
+
+                    <div class="divider">Prazos</div>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <c-django-form.field :field="form.submission_period_start" />
+                        <c-django-form.field :field="form.submission_period_end" />
+                        <c-django-form.field :field="form.evaluation_period_start" />
+                        <c-django-form.field :field="form.evaluation_period_end" />
+                    </div>
+
+                    <div class="divider">Divulgacao e contato</div>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <c-django-form.field :field="form.results_publication_date" />
+                        <c-django-form.field :field="form.contact_email" />
+                    </div>
+
+                    <div class="divider">Regras gerais</div>
+
+                    <c-django-form.field :field="form.submission_rules" />
+                    <c-django-form.field :field="form.blind_review" />
+
+                    <div class="card-actions justify-end">
+                        <button type="submit" class="btn btn-primary">Criar Evento</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </section>
+
+{% endblock platform_content %}

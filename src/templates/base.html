@@ -1,0 +1,144 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>
+
+            {% block title %}
+
+            {% endblock title %}
+
+            {% block site_name %}
+
+                Simpósio IntegraCAR
+
+            {% endblock site_name %}
+
+        </title>
+
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"
+                hx-preserve="true"
+                id="tailwindcss-js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@5"
+              rel="stylesheet"
+              type="text/css"
+              hx-preserve="true"
+              id="daisyui-css" />
+        <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"
+                integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz"
+                crossorigin="anonymous"
+                hx-preserve="true"
+                id="htmx-js"></script>
+
+        <link rel="stylesheet"
+              type="text/css"
+              href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+        <link rel="stylesheet"
+              type="text/css"
+              href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+
+        <link rel="apple-touch-icon"
+              sizes="180x180"
+              href="{% static 'img/favicon/apple-touch-icon.png' %}">
+        <link rel="icon"
+              type="image/png"
+              sizes="32x32"
+              href="{% static 'img/favicon/favicon-32x32.png' %}">
+        <link rel="icon"
+              type="image/png"
+              sizes="16x16"
+              href="{% static 'img/favicon/favicon-16x16.png' %}">
+        <link rel="manifest" href="{% static 'img/favicon/site.webmanifest' %}">
+
+        <link href="{% static 'css/styles.css' %}"
+              rel="stylesheet"
+              type="text/css"
+              hx-preserve="true"
+              id="styles-css" />
+
+        {% block extrahead %}
+
+        {% endblock extrahead %}
+
+    </head>
+
+    <body class="bg-base-200 min-h-screen" hx-boost="true">
+
+        <div id="htmx-progress-bar"
+             class="bg-primary/90"
+             style="position:fixed;
+                    top:0;
+                    left:0;
+                    height:3px;
+                    width:0;
+                    z-index:9999;
+                    transition:width 0.2s ease,opacity 0.4s ease;
+                    opacity:0;
+                    pointer-events:none"
+             hx-preserve></div>
+
+        <script>
+            (function() {
+                var bar = document.getElementById('htmx-progress-bar');
+                const startDelay = 100;
+                var timer = null;
+                var startDelayTimer = null;
+                var barStarted = false;
+
+                function startBar() {
+                    clearTimeout(timer);
+                    clearTimeout(startDelayTimer);
+                    barStarted = false;
+
+                    startDelayTimer = setTimeout(function() {
+                        barStarted = true;
+                        bar.style.transition = 'width 0.2s ease, opacity 0.1s ease';
+                        bar.style.opacity = '1';
+                        bar.style.width = '0%';
+
+                        requestAnimationFrame(function() {
+                            bar.style.transition = 'width 4s cubic-bezier(0.1,0.05,0,1), opacity 0.1s ease';
+                            bar.style.width = '80%';
+                        });
+                    }, startDelay);
+                }
+
+                function finishBar() {
+                    clearTimeout(timer);
+                    clearTimeout(startDelayTimer);
+
+                    if (!barStarted) {
+                        return;
+                    }
+
+                    barStarted = false;
+                    bar.style.transition = 'width 0.15s ease, opacity 0.4s ease 0.15s';
+                    bar.style.width = '100%';
+                    timer = setTimeout(function() {
+                        bar.style.opacity = '0';
+                        timer = setTimeout(function() {
+                            bar.style.width = '0%';
+                        }, 400);
+                    }, 150);
+                }
+
+                document.body.addEventListener('htmx:beforeRequest', startBar);
+                document.body.addEventListener('htmx:afterRequest', finishBar);
+            })();
+        </script>
+
+        {% block content %}
+
+        {% endblock content %}
+
+        {% block endbody %}
+
+        {% endblock endbody %}
+
+    </body>
+
+</html>

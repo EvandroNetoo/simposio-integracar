@@ -1,0 +1,90 @@
+{% extends 'platform_base.html' %}
+
+{% block platform_content %}
+
+    <section class="space-y-4">
+        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+                <h1 class="text-2xl font-bold">Eventos</h1>
+                <p class="text-sm text-base-content/70">Acompanhe os eventos registrados.</p>
+            </div>
+
+            <div class="">
+
+                {% if user.is_staff %}
+
+                    <a href="{% url 'event_create' %}" class="btn btn-primary">Adicionar Evento</a>
+
+                {% endif %}
+
+            </div>
+        </div>
+
+        {% if events %}
+
+            <div class="space-y-4">
+
+                {% for event in events %}
+                    <a href="{% url 'event_detail' event.pk %}"
+                       class="block w-full border border-base-300 rounded-lg p-4 bg-base-100 shadow-sm transition hover:bg-base-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                       aria-label="Ver detalhes do evento {{ event.name }}">
+                        <div class="flex flex-col gap-3">
+                            <div class="flex flex-col gap-1">
+                                <h2 class="text-base font-semibold">{{ event.name }}</h2>
+                                <p class="text-sm text-base-content/70">
+                                    Edicao {{ event.edition }} · {{ event.year }}
+                                </p>
+                            </div>
+
+                            <div class="divider my-0"></div>
+
+                            <div class="grid gap-2 text-sm md:grid-cols-3">
+                                <div class="flex items-center md:justify-start gap-2">
+                                    <span class="text-base-content/70">Submissao</span>
+                                    <span class="font-medium">
+                                        {{ event.submission_period_start|date:"d/m/Y H:i" }}
+                                        -
+                                        {{ event.submission_period_end|date:"d/m/Y H:i" }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center md:justify-center gap-2">
+                                    <span class="text-base-content/70">Avaliacao</span>
+                                    <span class="font-medium">
+                                        {{ event.evaluation_period_start|date:"d/m/Y H:i" }}
+                                        -
+                                        {{ event.evaluation_period_end|date:"d/m/Y H:i" }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center md:justify-end gap-2">
+                                    <span class="text-base-content/70">Resultados</span>
+                                    <span class="font-medium">
+                                        {{ event.results_publication_date|date:"d/m/Y H:i" }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="divider my-0"></div>
+
+                            <div class="grid gap-2 text-sm md:grid-cols-2">
+                                <p class="font-medium">{{ event.organizing_institution }}</p>
+                                <p class="text-base-content/70 md:text-right">{{ event.contact_email }}</p>
+                            </div>
+                        </div>
+                    </a>
+
+                {% endfor %}
+            </div>
+
+        {% else %}
+
+            <div class="p-6">
+                <div class="alert alert-info alert-soft">
+                    <i class="ph ph-info text-lg"></i>
+                    <span>Nenhum evento encontrado com os filtros selecionados.</span>
+                </div>
+            </div>
+
+        {% endif %}
+    </section>
+
+{% endblock platform_content %}

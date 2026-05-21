@@ -1,0 +1,62 @@
+{% load widget_tweaks utils %}
+
+{% if field.field.widget|klass == 'CheckboxInput' %}
+
+    <label for="{{ field.id_for_label }}" class="flex gap-2 w-fit items-center">
+        {{ field|add_class:'toggle toggle-sm toggle-secondary' }}
+
+        <span class="fieldset-legend flex items-center justify-start gap-1">
+            {{ field.label }}
+
+            {% if field.field.required %}<span class="text-error">*</span>{% endif %}
+        </span>
+
+    </label>
+
+{% elif field.field.widget|klass == 'CheckboxSelectMultiple' %}
+
+    <div id="{{ field.id_for_label }}">
+
+        {% for checkbox in field %}
+
+            <div>
+                <label for="{{ checkbox.id_for_label }}"
+                       class="label flex gap-1 items-center w-fit">
+
+                    {{ checkbox|add_class:'checkbox checkbox-xs checkbox-secondary rounded-sm' }}
+
+                    {{ checkbox.choice_label }}
+
+                </label>
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+{% elif field.field.widget.input_type == 'checkbox' %}
+
+    {{ field }}
+
+{% elif field.field.widget.input_type == 'radio' %}
+
+    {{ field }}
+
+{% elif field.field.widget.input_type == 'file' %}
+
+    {{ field|add_class:'file-input border-secondary w-full' }}
+
+{% elif field.field.widget.input_type == 'select' %}
+
+    {{ field|add_class:'select select-secondary w-full' }}
+
+{% elif field.field.widget.template_name == 'django/forms/widgets/textarea.html' %}
+
+    {{ field|add_class:'textarea textarea-secondary w-full' }}
+
+{% else %}
+
+
+    {{ field|add_class:'input input-secondary w-full' }}
+
+{% endif %}

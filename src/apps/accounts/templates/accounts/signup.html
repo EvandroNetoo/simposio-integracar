@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block content %}
+
+    <div class="min-h-screen flex items-center justify-center px-4 py-10">
+        <div class="card w-full max-w-md bg-base-100 shadow-xl border border-secondary">
+            <div class="card-body">
+                <div class="flex flex-col items-center gap-3">
+                    <img src="{% static 'img/logo.png' %}"
+                         alt="Simpósio IntegraCAR"
+                         class="h-20 w-auto"
+                         hx-preserve="true"
+                         id="signup-logo">
+                </div>
+
+                <h1 class="mt-4 text-center text-2xl font-bold">Simpósio IntegraCAR</h1>
+                <p class="text-center text-base-content/70">
+                    Crie sua conta para participar do evento
+                </p>
+
+                <div class="divider divider-secondary"></div>
+
+                <c-htmx-form url="{% url 'signup' %}" class="space-y-4">
+                    <div id="form">
+                        <c-django-form :form="form" />
+                    </div>
+
+                    <div class="card-actions">
+                        <button type="submit" class="btn btn-primary btn-block">Cadastrar</button>
+                    </div>
+                </c-htmx-form>
+
+                <div class="divider divider-secondary"></div>
+
+                <p class="text-center text-sm text-base-content/70">
+                    Já tem uma conta?
+                    <a href="{% url 'signin' %}"
+                       class="text-primary font-semibold hover:underline">
+                        Faça login
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}
