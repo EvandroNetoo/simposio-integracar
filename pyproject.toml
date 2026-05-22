@@ -46,9 +46,9 @@ select = [
     "I",   # isort (ordem de imports)
     # "DJ",  # regras específicas de Django
     "ASYNC", # regras para código assíncrono
-    "Q",   # flake8-quotes (estilo de aspas)
-    "S",   # bandit (segurança)
-    "W",   # pycodestyle (avisos de estilo)
+    "Q",     # flake8-quotes (estilo de aspas)
+    "S",     # bandit (segurança)
+    "W",     # pycodestyle (avisos de estilo)
 ]
 
 ignore = ["E501"]
@@ -62,7 +62,7 @@ quote-style = "single"
 
 [tool.djlint]
 max_blank_lines = 1
-max_line_length=79
+max_line_length = 79
 indent = 4
 tabs = true
 format_css = true
