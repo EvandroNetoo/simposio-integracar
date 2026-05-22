@@ -1,0 +1,668 @@
+{% extends 'platform_base.html' %}
+
+{% block platform_content %}
+
+    <section class="space-y-4">
+        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+                <h1 class="text-2xl font-bold">{{ page_title|default:"Enviar trabalho" }}</h1>
+                <p class="text-sm text-base-content/70">
+                    {{ page_subtitle|default:"Preencha os dados para cadastrar um novo trabalho." }}
+                </p>
+            </div>
+
+            {% if back_url %}
+
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <a href="{{ back_url }}" class="btn btn-ghost">
+                        {{ back_label|default:"Voltar" }}
+                    </a>
+                </div>
+
+            {% endif %}
+        </div>
+
+        <div class="card bg-base-100 border border-base-300 shadow-sm overflow-hidden">
+
+            <div class="card-body">
+
+                <form method="post" class="space-y-8">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+
+                        <div role="alert" class="alert alert-error alert-soft text-sm">
+                            <i class="ph ph-warning-circle text-lg"></i>
+                            <div>
+
+                                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                            </div>
+                        </div>
+
+                    {% endif %}
+
+                    {% if coauthor_formset.non_form_errors %}
+
+                        <div role="alert" class="alert alert-error alert-soft text-sm">
+                            <i class="ph ph-warning-circle text-lg"></i>
+                            <div>
+
+                                {% for error in coauthor_formset.non_form_errors %}
+                                    <p>{{ error }}</p>
+
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                    {% endif %}
+                    <div class="divider">Informações do trabalho</div>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <c-django-form.field :field="form.title" />
+
+                        <div class="md:col-span-2">
+                            <c-django-form.field :field="form.abstract" />
+                        </div>
+                    </div>
+
+                    <div class="divider">Coautores</div>
+
+                    <div class="space-y-4"
+                         data-coauthor-formset
+                         data-prefix="{{ coauthor_formset.prefix }}">
+                        {{ coauthor_formset.management_form }}
+
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p class="text-sm font-medium">Lista de coautores</p>
+                                <p class="text-xs text-base-content/60">
+                                    Adicione quantos coautores precisar e defina a ordem de autoria.
+                                </p>
+                            </div>
+                            <button type="button"
+                                    class="btn btn-secondary btn-sm gap-2"
+                                    data-coauthor-add
+                                    hx-on:click="window.coauthorForm && window.coauthorForm.addRow()">
+                                <i class="ph ph-user-plus text-lg"></i>
+                                Adicionar coautor
+                            </button>
+                        </div>
+
+                        <div class="space-y-3" data-coauthor-list>
+
+                            {% for coauthor_form in coauthor_formset %}
+
+                                <div class="card card-sm bg-base-100 border border-base-300"
+                                     data-coauthor-row
+                                     data-coauthor-prefix="{{ coauthor_form.prefix }}">
+                                    <div class="card-body gap-3 p-4">
+                                        <div class="flex flex-wrap items-center justify-between gap-3">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <span class="badge badge-primary badge-sm" data-coauthor-title>
+                                                    Coautor {{ forloop.counter }}
+                                                </span>
+                                                <span class="text-xs text-base-content/60">Escolha o tipo de cadastro</span>
+                                            </div>
+                                            <button type="button"
+                                                    class="btn btn-ghost btn-xs text-error gap-2"
+                                                    data-coauthor-remove>
+                                                <i class="ph ph-trash text-base"></i>
+                                                Remover
+                                            </button>
+                                        </div>
+
+                                        {% if coauthor_form.non_field_errors %}
+
+                                            <div role="alert" class="alert alert-error alert-soft text-sm">
+                                                <i class="ph ph-warning-circle text-lg"></i>
+                                                <div>
+
+                                                    {% for error in coauthor_form.non_field_errors %}
+                                                        <p>{{ error }}</p>
+
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+
+                                        {% endif %}
+
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="text-xs uppercase text-base-content/60">Cadastro</span>
+                                            <div class="join">
+                                                <button type="button" class="btn btn-xs join-item" data-coauthor-mode="user">
+                                                    <i class="ph ph-users-three text-base"></i>
+                                                    Usuário do sistema
+                                                    <span class="badge badge-success badge-sm">Recomendado</span>
+                                                </button>
+                                                <button type="button"
+                                                        class="btn btn-xs join-item"
+                                                        data-coauthor-mode="manual">
+                                                    <i class="ph ph-pencil-simple text-base"></i>
+                                                    Preencher manualmente
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="grid gap-4 md:grid-cols-2" data-coauthor-section="user">
+                                            <div data-coauthor-user-field>
+                                                <c-django-form.field :field="coauthor_form.user" />
+                                            </div>
+                                        </div>
+
+                                        <div class="grid gap-4 md:grid-cols-2" data-coauthor-section="manual">
+                                            <div data-coauthor-manual-field>
+                                                <c-django-form.field :field="coauthor_form.name" />
+                                            </div>
+                                            <div data-coauthor-manual-field>
+                                                <c-django-form.field :field="coauthor_form.email" />
+                                            </div>
+                                            <div data-coauthor-manual-field>
+                                                <c-django-form.field :field="coauthor_form.institution" />
+                                            </div>
+                                            <div data-coauthor-manual-field>
+                                                <c-django-form.field :field="coauthor_form.affiliation_type" />
+                                            </div>
+                                        </div>
+
+                                        <div class="hidden" data-coauthor-order-field>
+                                            <c-django-form.field :field="coauthor_form.authorship_order" />
+                                        </div>
+
+                                        <div class="hidden">
+                                            {{ coauthor_form.id }}
+                                            {{ coauthor_form.DELETE }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                            {% endfor %}
+                        </div>
+
+                        <p class="text-xs text-base-content/60">
+                            Você poderá alterar os coautores depois do envio.
+                        </p>
+
+                        <div class="divider">Ordem de autoria</div>
+
+                        <div class="card bg-base-200/60 border border-base-300"
+                             data-author-order
+                             data-main-author="{{ main_author|default:request.user.full_name|default:request.user.email }}">
+                            <div class="card-body gap-4">
+                                <div class="flex flex-wrap items-start justify-between gap-3">
+                                    <div>
+                                        <p class="text-sm font-medium">Arraste para ordenar</p>
+                                        <p class="text-xs text-base-content/60">
+                                            A ordem inclui o autor principal e pode ser ajustada depois.
+                                        </p>
+                                    </div>
+                                    <span class="badge badge-secondary badge-sm">Drag & drop</span>
+                                </div>
+
+                                <ul class="space-y-2" data-author-order-list>
+                                </ul>
+                                <p class="text-xs text-base-content/60" data-author-order-empty>
+                                    Adicione coautores para mudar a ordem.
+                                </p>
+                            </div>
+                        </div>
+
+                        <template id="coauthor-empty-template">
+
+                            {% with coauthor_form=coauthor_formset.empty_form %}
+
+                                <div class="card card-sm bg-base-100 border border-base-300"
+                                     data-coauthor-row
+                                     data-coauthor-prefix="__prefix__">
+                                    <div class="card-body gap-3 p-4">
+                                        <div class="flex flex-wrap items-center justify-between gap-3">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <span class="badge badge-primary badge-sm" data-coauthor-title>Coautor</span>
+                                                <span class="text-xs text-base-content/60">Escolha o tipo de cadastro</span>
+                                            </div>
+                                            <button type="button"
+                                                    class="btn btn-ghost btn-xs text-error gap-2"
+                                                    data-coauthor-remove>
+                                                <i class="ph ph-trash text-base"></i>
+                                                Remover
+                                            </button>
+                                        </div>
+
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="text-xs uppercase text-base-content/60">Cadastro</span>
+                                            <div class="join">
+                                                <button type="button" class="btn btn-xs join-item" data-coauthor-mode="user">
+                                                    <i class="ph ph-users-three text-base"></i>
+                                                    Usuário do sistema
+                                                    <span class="badge badge-success badge-sm">Recomendado</span>
+                                                </button>
+                                                <button type="button"
+                                                        class="btn btn-xs join-item"
+                                                        data-coauthor-mode="manual">
+                                                    <i class="ph ph-pencil-simple text-base"></i>
+                                                    Preencher manualmente
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="grid gap-4 md:grid-cols-2" data-coauthor-section="user">
+                                            <div data-coauthor-user-field>
+                                                <c-django-form.field :field="coauthor_form.user" />
+                                            </div>
+                                        </div>
+
+                                        <div class="grid gap-4 md:grid-cols-2" data-coauthor-section="manual">
+                                            <div data-coauthor-manual-field>
+                                                <c-django-form.field :field="coauthor_form.name" />
+                                            </div>
+                                            <div data-coauthor-manual-field>
+                                                <c-django-form.field :field="coauthor_form.email" />
+                                            </div>
+                                            <div data-coauthor-manual-field>
+                                                <c-django-form.field :field="coauthor_form.institution" />
+                                            </div>
+                                            <div data-coauthor-manual-field>
+                                                <c-django-form.field :field="coauthor_form.affiliation_type" />
+                                            </div>
+                                        </div>
+
+                                        <div class="hidden" data-coauthor-order-field>
+                                            <c-django-form.field :field="coauthor_form.authorship_order" />
+                                        </div>
+
+                                        <div class="hidden">
+                                            {{ coauthor_form.id }}
+                                            {{ coauthor_form.DELETE }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                            {% endwith %}
+
+                        </template>
+                    </div>
+
+                    <div class="card-actions justify-end">
+                        <button type="submit" class="btn btn-primary">
+                            {{ submit_label|default:"Enviar trabalho" }}
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </section>
+
+{% endblock platform_content %}
+
+{% block endbody %}
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script>
+        (function() {
+            const formsetRoot = document.querySelector('[data-coauthor-formset]');
+            if (!formsetRoot) {
+                return;
+            }
+
+            const list = formsetRoot.querySelector('[data-coauthor-list]');
+            const totalInput = formsetRoot.querySelector(
+                'input[name$="-TOTAL_FORMS"]'
+            );
+            const template = formsetRoot.querySelector('#coauthor-empty-template');
+            const orderContainer = document.querySelector('[data-author-order]');
+            const orderList = orderContainer ?
+                orderContainer.querySelector('[data-author-order-list]') :
+                null;
+            const orderEmpty = orderContainer ?
+                orderContainer.querySelector('[data-author-order-empty]') :
+                null;
+            const mainAuthor = orderContainer ? orderContainer.dataset.mainAuthor : '';
+            let sortableInstance = null;
+
+            if (!totalInput) {
+                return;
+            }
+
+            function ensureMainAuthorItem() {
+                if (!orderList || !mainAuthor) {
+                    return;
+                }
+                const existing = orderList.querySelector('[data-author-main]');
+                if (existing) {
+                    return;
+                }
+                const item = document.createElement('li');
+                item.className =
+                    'flex items-center justify-between gap-3 rounded-lg border border-base-300 bg-base-100 px-3 py-2';
+                item.setAttribute('data-author-item', '');
+                item.setAttribute('data-author-main', '');
+                item.innerHTML = `
+					<div class="flex items-center gap-3">
+						<div class="btn btn-ghost btn-xs btn-square opacity-40">
+							<i class="ph ph-lock text-base"></i>
+						</div>
+						<div>
+							<p class="text-sm font-medium">${mainAuthor}</p>
+							<p class="text-xs text-base-content/60">Autor principal</p>
+						</div>
+					</div>
+					<span class="badge badge-outline badge-sm">Fixo</span>
+				`;
+                orderList.appendChild(item);
+            }
+
+            function getCoauthorLabel(row) {
+                const userSelect = row.querySelector(
+                    '[data-coauthor-section="user"] select'
+                );
+                if (userSelect && userSelect.value) {
+                    return {
+                        name: userSelect.options[userSelect.selectedIndex].text,
+                        meta: 'Usuário do sistema',
+                    };
+                }
+                const nameInput = row.querySelector('input[name$="-name"]');
+                const emailInput = row.querySelector('input[name$="-email"]');
+                const name = nameInput && nameInput.value ? nameInput.value : '';
+                const email = emailInput && emailInput.value ? emailInput.value : '';
+                if (name || email) {
+                    return {
+                        name: name || email,
+                        meta: email && name ? email : 'Coautor manual',
+                    };
+                }
+                return {
+                    name: 'Coautor sem nome',
+                    meta: 'Preencha os dados para identificar',
+                };
+            }
+
+            function createCoauthorItem(prefix) {
+                const item = document.createElement('li');
+                item.className =
+                    'flex items-center justify-between gap-3 rounded-lg border border-base-300 bg-base-100 px-3 py-2';
+                item.setAttribute('data-author-item', '');
+                item.setAttribute('data-coauthor-prefix', prefix);
+                item.innerHTML = `
+					<div class="flex items-center gap-3">
+						<div class="btn btn-ghost btn-xs btn-square cursor-grab" data-author-handle>
+							<i class="ph ph-dots-six-vertical text-base"></i>
+						</div>
+						<div>
+							<p class="text-sm font-medium" data-author-name></p>
+							<p class="text-xs text-base-content/60" data-author-meta></p>
+						</div>
+					</div>
+					<span class="badge badge-outline badge-sm">Coautor</span>
+				`;
+                return item;
+            }
+
+            function updateCoauthorItem(row, item) {
+                const label = getCoauthorLabel(row);
+                const nameEl = item.querySelector('[data-author-name]');
+                const metaEl = item.querySelector('[data-author-meta]');
+                if (nameEl) {
+                    nameEl.textContent = label.name;
+                }
+                if (metaEl) {
+                    metaEl.textContent = label.meta;
+                }
+            }
+
+            function syncOrderList() {
+                if (!orderList) {
+                    return;
+                }
+
+                ensureMainAuthorItem();
+
+                const activePrefixes = new Set();
+                list.querySelectorAll('[data-coauthor-row]').forEach((row) => {
+                    const deleteInput = row.querySelector('input[name$="-DELETE"]');
+                    if (row.classList.contains('hidden')) {
+                        return;
+                    }
+                    if (deleteInput && deleteInput.checked) {
+                        return;
+                    }
+                    const prefix = row.dataset.coauthorPrefix;
+                    if (!prefix) {
+                        return;
+                    }
+                    activePrefixes.add(prefix);
+                    let item = orderList.querySelector(
+                        `[data-coauthor-prefix="${prefix}"]`
+                    );
+                    if (!item) {
+                        item = createCoauthorItem(prefix);
+                        orderList.appendChild(item);
+                    }
+                    updateCoauthorItem(row, item);
+                });
+
+                orderList
+                    .querySelectorAll('[data-coauthor-prefix]')
+                    .forEach((item) => {
+                        if (!activePrefixes.has(item.dataset.coauthorPrefix)) {
+                            item.remove();
+                        }
+                    });
+
+                if (orderEmpty) {
+                    orderEmpty.classList.toggle('hidden', activePrefixes.size > 0);
+                }
+
+                if (window.Sortable && orderList && !sortableInstance) {
+                    sortableInstance = new Sortable(orderList, {
+                        animation: 150,
+                        handle: '[data-author-handle]',
+                        draggable: '[data-coauthor-prefix]',
+                        filter: '[data-author-main]',
+                        ghostClass: 'opacity-70',
+                        onMove: (event) => {
+                            if (event.related && event.related.dataset.authorMain !== undefined) {
+                                return false;
+                            }
+                            return true;
+                        },
+                        onEnd: updateOrderInputs,
+                    });
+                }
+
+                updateOrderInputs();
+            }
+
+            function updateOrderInputs() {
+                if (!orderList) {
+                    return;
+                }
+                const mainItem = orderList.querySelector('[data-author-main]');
+                if (mainItem && orderList.firstElementChild !== mainItem) {
+                    orderList.insertBefore(mainItem, orderList.firstElementChild);
+                }
+                const items = orderList.querySelectorAll('[data-author-item]');
+                items.forEach((item, index) => {
+                    const prefix = item.dataset.coauthorPrefix;
+                    if (!prefix) {
+                        return;
+                    }
+                    const input = formsetRoot.querySelector(
+                        `input[name="${prefix}-authorship_order"]`
+                    );
+                    if (input) {
+                        input.value = index + 1;
+                    }
+                });
+            }
+
+            function updateTitles() {
+                const rows = Array.from(
+                    list.querySelectorAll('[data-coauthor-row]')
+                ).filter((row) => !row.classList.contains('hidden'));
+
+                rows.forEach((row, index) => {
+                    const label = row.querySelector('[data-coauthor-title]');
+                    const orderInput = row.querySelector(
+                        'input[name$="-authorship_order"]'
+                    );
+                    if (label) {
+                        label.textContent = `Coautor ${index + 1}`;
+                    }
+                    if (orderInput && !orderInput.value) {
+                        orderInput.value = index + 1;
+                    }
+                });
+
+                syncOrderList();
+            }
+
+            function getInputs(container) {
+                if (!container) {
+                    return [];
+                }
+                return Array.from(
+                    container.querySelectorAll('input, select, textarea')
+                ).filter((input) => input.type !== 'hidden');
+            }
+
+            function setInputsEnabled(inputs, enabled) {
+                inputs.forEach((input) => {
+                    input.disabled = !enabled;
+                });
+            }
+
+            function setMode(row, mode) {
+                const userSection = row.querySelector(
+                    '[data-coauthor-section="user"]'
+                );
+                const manualSection = row.querySelector(
+                    '[data-coauthor-section="manual"]'
+                );
+                const modeButtons = row.querySelectorAll('[data-coauthor-mode]');
+                const userInputs = getInputs(userSection);
+                const manualInputs = getInputs(manualSection);
+
+                modeButtons.forEach((button) => {
+                    button.classList.toggle(
+                        'btn-active',
+                        button.dataset.coauthorMode === mode
+                    );
+                });
+
+                if (userSection) {
+                    userSection.classList.toggle('hidden', mode !== 'user');
+                }
+                if (manualSection) {
+                    manualSection.classList.toggle('hidden', mode !== 'manual');
+                }
+
+                setInputsEnabled(userInputs, mode === 'user');
+                setInputsEnabled(manualInputs, mode === 'manual');
+            }
+
+            function inferMode(row) {
+                const userInput = row.querySelector(
+                    '[data-coauthor-section="user"] select, [data-coauthor-section="user"] input'
+                );
+                const manualInputs = row.querySelectorAll(
+                    '[data-coauthor-section="manual"] input, [data-coauthor-section="manual"] select, [data-coauthor-section="manual"] textarea'
+                );
+                const hasUser = userInput && userInput.value;
+                const hasManual = Array.from(manualInputs).some(
+                    (input) => input.value
+                );
+                if (hasUser) {
+                    return 'user';
+                }
+                if (hasManual) {
+                    return 'manual';
+                }
+                return 'user';
+            }
+
+            function attachRow(row) {
+                const deleteInput = row.querySelector('input[name$="-DELETE"]');
+                if (deleteInput && deleteInput.checked) {
+                    row.classList.add('hidden');
+                }
+
+                row.querySelectorAll('[data-coauthor-mode]').forEach((button) => {
+                    button.addEventListener('click', () => {
+                        setMode(row, button.dataset.coauthorMode);
+                    });
+                });
+
+                const userInput = row.querySelector(
+                    '[data-coauthor-section="user"] select, [data-coauthor-section="user"] input'
+                );
+                if (userInput) {
+                    userInput.addEventListener('change', () => {
+                        if (userInput.value) {
+                            setMode(row, 'user');
+                        }
+                        syncOrderList();
+                    });
+                }
+
+                row.querySelectorAll(
+                    '[data-coauthor-section="manual"] input, [data-coauthor-section="manual"] select, [data-coauthor-section="manual"] textarea'
+                ).forEach((input) => {
+                    input.addEventListener('input', () => {
+                        if (input.value) {
+                            setMode(row, 'manual');
+                        }
+                        syncOrderList();
+                    });
+                });
+
+                const removeButton = row.querySelector('[data-coauthor-remove]');
+                if (removeButton) {
+                    removeButton.addEventListener('click', () => {
+                        if (deleteInput) {
+                            deleteInput.checked = true;
+                            row.classList.add('hidden');
+                        } else {
+                            row.remove();
+                            const total = Math.max(
+                                0,
+                                parseInt(totalInput.value, 10) - 1
+                            );
+                            totalInput.value = total;
+                        }
+                        updateTitles();
+                    });
+                }
+
+                setMode(row, inferMode(row));
+                syncOrderList();
+            }
+
+            function addRow() {
+                if (!template) {
+                    return;
+                }
+                const index = parseInt(totalInput.value, 10);
+                const html = template.innerHTML.replace(/__prefix__/g, index);
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = html.trim();
+                const row = wrapper.firstElementChild;
+                if (!row) {
+                    return;
+                }
+                list.appendChild(row);
+                totalInput.value = index + 1;
+                attachRow(row);
+                updateTitles();
+            }
+
+            list.querySelectorAll('[data-coauthor-row]').forEach(attachRow);
+            updateTitles();
+            syncOrderList();
+
+            window.coauthorForm = window.coauthorForm || {};
+            window.coauthorForm.addRow = addRow;
+        })();
+    </script>
+
+{% endblock endbody %}

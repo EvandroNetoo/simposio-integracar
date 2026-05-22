@@ -14,7 +14,9 @@ urlpatterns = [
     ),
     path('admin/', admin.site.urls),
     path('', include('accounts.urls')),
-    path('eventos/', include('events.urls')),
+    path('', include('events.urls')),
+    path('', include('papers.urls')),
+    path('', include('reviews.urls')),
 ]
 
 

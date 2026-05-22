@@ -76,3 +76,27 @@ class UserAdmin(auth_admin.UserAdmin):
             },
         ),
     )
+
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = (
+        'user',
+        'affiliation_type',
+        'institution',
+        'city',
+        'state',
+        'phone',
+    )
+    search_fields = (
+        'user__email',
+        'user__first_name',
+        'user__surname',
+        'cpf',
+        'institution',
+        'city',
+        'state',
+    )
+    list_filter = ('affiliation_type', 'state')
+    autocomplete_fields = ('user',)
+    list_select_related = ('user',)

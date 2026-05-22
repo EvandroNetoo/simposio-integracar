@@ -1,5 +1,5 @@
 from django.http import HttpRequest
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 
 from events.forms import EventForm
@@ -29,7 +29,7 @@ class EventCreateView(View):
         event: Event = form.save(commit=False)
         event.owner = request.user
         event.save()
-        return render(request, 'events/event_success.html', {'event': event})
+        return redirect('event_detail', pk=event.pk)
 
 
 class EventDetailView(View):

@@ -1,0 +1,125 @@
+{% extends 'platform_base.html' %}
+
+{% block platform_content %}
+
+    <section class="space-y-4">
+        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+                <h1 class="text-2xl font-bold">{{ paper.title }}</h1>
+                <p class="text-sm text-base-content/70">
+                    {{ event.name }} · Edicao {{ event.edition }} · {{ event.year }}
+                </p>
+            </div>
+
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <a href="{% url 'paper_change' event_pk=event.pk pk=paper.pk %}"
+                   class="btn btn-primary gap-2">
+                    <i class="ph ph-pencil-simple text-lg"></i>
+                    Editar trabalho
+                </a>
+                <a href="{% url 'event_detail' event.pk %}" class="btn btn-ghost">
+                    Voltar ao evento
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-base-100 border border-base-300 rounded-lg p-6 shadow-sm space-y-4">
+            <div class="grid gap-4 md:grid-cols-2 text-sm">
+                <div class="space-y-1">
+                    <p class="text-base-content/70">Autor principal</p>
+                    <p class="font-medium">{{ paper.user.full_name|default:paper.user.email }}</p>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-base-content/70">Enviado em</p>
+                    <p class="font-medium">{{ paper.created_at|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+
+            <div class="divider my-0"></div>
+
+            <div class="space-y-1">
+                <h2 class="text-base font-semibold">Resumo</h2>
+                <p class="text-sm text-base-content/70 whitespace-pre-line">
+                    {{ paper.abstract }}
+                </p>
+            </div>
+
+            <div class="divider my-0"></div>
+
+            <div class="space-y-2">
+                <h2 class="text-base font-semibold">Ordem de autoria</h2>
+                <ol class="space-y-2">
+                    <li class="flex items-center justify-between gap-3 rounded-lg border border-base-300 bg-base-100 px-3 py-2">
+                        <div class="flex items-center gap-3">
+                            <span class="badge badge-primary badge-sm">1</span>
+                            <div>
+                                <p class="text-sm font-medium">
+                                    {{ paper.user.full_name|default:paper.user.email }}
+                                </p>
+                                <p class="text-xs text-base-content/60">Autor principal</p>
+                            </div>
+                        </div>
+                        <span class="badge badge-outline badge-sm">Fixo</span>
+                    </li>
+
+                    {% for coauthor in coauthors %}
+
+                        <li class="flex items-center justify-between gap-3 rounded-lg border border-base-300 bg-base-100 px-3 py-2">
+                            <div class="flex items-center gap-3">
+                                <span class="badge badge-primary badge-sm">
+                                    {{ coauthor.authorship_order }}
+                                </span>
+                                <div>
+                                    <p class="text-sm font-medium">
+
+                                        {% if coauthor.user_id %}
+
+                                            {{ coauthor.user.full_name|default:coauthor.user.email }}
+
+                                        {% else %}
+
+                                            {{ coauthor.name|default:coauthor.email }}
+
+                                        {% endif %}
+                                    </p>
+                                    <p class="text-xs text-base-content/60">
+
+                                        {% if coauthor.user_id %}
+
+                                            {{ coauthor.user.email }}
+
+                                        {% else %}
+
+                                            {{ coauthor.email }}
+
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {% if coauthor.affiliation_type %}
+
+                                <span class="badge badge-ghost badge-sm">
+                                    {{ coauthor.get_affiliation_type_display }}
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge badge-outline badge-sm">Coautor</span>
+
+                            {% endif %}
+                        </li>
+
+                    {% endfor %}
+                </ol>
+
+                {% if not coauthors %}
+
+                    <p class="text-xs text-base-content/60">Nenhum coautor cadastrado.</p>
+
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+{% endblock platform_content %}
