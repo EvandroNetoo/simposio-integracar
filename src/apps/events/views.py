@@ -1,6 +1,7 @@
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
+from papers.models import Paper
 
 from events.forms import EventForm
 from events.models import Event
@@ -37,4 +38,16 @@ class EventDetailView(View):
 
     def get(self, request: HttpRequest, pk: int):
         event = get_object_or_404(Event, pk=pk)
-        return render(request, self.template_name, {'event': event})
+        papers = (
+            Paper.objects
+            .filter(event=event, user=request.user)
+            .select_related('event')
+            .prefetch_related('coauthors')
+            .order_by('-created_at')
+        )
+        context = {
+            'event': event,
+            'papers': papers,
+            'papers_total': papers.count(),
+        }
+        return render(request, self.template_name, context)

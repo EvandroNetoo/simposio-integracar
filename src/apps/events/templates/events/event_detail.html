@@ -91,6 +91,66 @@
                 </p>
             </div>
         </div>
+
+        <div class="card bg-base-100 border border-base-300 shadow-sm">
+            <div class="card-body gap-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <h2 class="text-lg font-semibold">Meus trabalhos neste evento</h2>
+                        <p class="text-xs text-base-content/60">
+                            {{ papers_total }} trabalho{{ papers_total|pluralize }} no total.
+                        </p>
+                    </div>
+                    <a href="{% url 'paper_list' %}" class="btn btn-ghost btn-sm">Ver todos</a>
+                </div>
+
+                {% if papers %}
+
+                    <ul class="space-y-3">
+
+                        {% for paper in papers %}
+
+                            <li>
+                                <a href="{% url 'paper_detail' pk=paper.pk %}"
+                                   class="card card-sm bg-base-100 border border-base-300 transition hover:border-primary/40 hover:shadow-md">
+                                    <div class="card-body gap-3">
+                                        <div class="flex flex-wrap items-center justify-between gap-2">
+                                            <h3 class="card-title text-base">{{ paper.title }}</h3>
+                                            <span class="badge badge-ghost badge-sm">
+                                                {{ paper.created_at|date:"d/m/Y" }}
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-base-content/70">
+                                            {{ paper.abstract|truncatewords:28 }}
+                                        </p>
+
+                                        <div class="flex flex-wrap items-center justify-between gap-3">
+                                            <span class="text-xs text-base-content/60">
+                                                {{ paper.coauthors.all|length }} coautor{{ paper.coauthors.all|length|pluralize }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+
+                        {% endfor %}
+                    </ul>
+
+                {% else %}
+
+                    <div role="alert" class="alert alert-info alert-soft text-sm">
+                        <i class="ph ph-info text-lg"></i>
+                        <div>
+                            <p class="font-medium">Nenhum trabalho enviado ainda.</p>
+                            <p class="text-xs text-base-content/60">
+                                Use o botao "Enviar trabalho" para comecar.
+                            </p>
+                        </div>
+                    </div>
+
+                {% endif %}
+            </div>
+        </div>
     </section>
 
 {% endblock platform_content %}

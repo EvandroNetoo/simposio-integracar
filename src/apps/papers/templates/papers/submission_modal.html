@@ -1,0 +1,13 @@
+{% load utils %}
+
+<c-modal title="Nova submissao" id="submission-modal">
+    <c-htmx-form url="{% url 'submission_create' pk=paper.pk %}" target="#submission-form" enctype="multipart/form-data" hx-encoding="multipart/form-data" class="space-y-4">
+        <div id="submission-form" class="space-y-4">
+            <c-django-form :form="form" />
+        </div>
+
+        <div class="modal-action">
+            <button type="submit" class="btn btn-primary">Enviar submissao</button>
+        </div>
+    </c-htmx-form>
+</c-modal>

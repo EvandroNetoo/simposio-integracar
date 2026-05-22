@@ -1,11 +1,13 @@
+from django.http import HttpResponse
 from django.http.request import HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views import View
 from events.models import Event
+from reviews.models import Review
 
-from papers.forms import CoauthorFormSet, PaperForm
-from papers.models import Paper
+from papers.forms import CoauthorFormSet, PaperForm, SubmissionForm
+from papers.models import Paper, Submission
 
 
 class PaperFormBaseView(View):
@@ -38,6 +40,24 @@ class PaperFormBaseView(View):
             coauthor_formset=coauthor_formset,
             **extra,
         )
+        return render(request, self.template_name, context)
+
+
+class PaperListView(View):
+    template_name = 'papers/paper_list.html'
+
+    def get(self, request: HttpRequest):
+        papers = (
+            Paper.objects
+            .filter(user=request.user)
+            .select_related('event')
+            .prefetch_related('coauthors')
+            .order_by('-created_at')
+        )
+        context = {
+            'papers': papers,
+            'papers_total': papers.count(),
+        }
         return render(request, self.template_name, context)
 
 
@@ -86,25 +106,54 @@ class PaperCreateView(PaperFormBaseView):
         paper.save()
         coauthor_formset.instance = paper
         coauthor_formset.save()
-        return redirect('paper_detail', event_pk=paper.event_id, pk=paper.pk)
+        return redirect('paper_detail', pk=paper.pk)
 
 
 class PaperDetailView(View):
     template_name = 'papers/paper_detail.html'
 
-    def get(self, request: HttpRequest, event_pk: int, pk: int):
+    def get(self, request: HttpRequest, pk: int):
         paper = get_object_or_404(
             Paper.objects.select_related('event', 'user').prefetch_related(
                 'coauthors__user'
             ),
             pk=pk,
-            event_id=event_pk,
+            user=request.user,
         )
         coauthors = paper.coauthors.select_related('user').all()
+        submissions = list(paper.submission_set.all().order_by('created_at'))
+        reviews = list(
+            Review.objects
+            .filter(assignment__paper=paper)
+            .select_related(
+                'assignment__reviewer__user',
+                'assignment',
+            )
+            .order_by('submitted_at')
+        )
+        submission_items = []
+        for index, submission in enumerate(submissions):
+            next_created_at = None
+            if index + 1 < len(submissions):
+                next_created_at = submissions[index + 1].created_at
+            submission_reviews = [
+                review
+                for review in reviews
+                if review.submitted_at >= submission.created_at
+                and (
+                    next_created_at is None
+                    or review.submitted_at < next_created_at
+                )
+            ]
+            submission_items.append({
+                'submission': submission,
+                'reviews': submission_reviews,
+            })
         context = {
             'paper': paper,
             'event': paper.event,
             'coauthors': coauthors,
+            'submission_items': submission_items,
         }
         return render(request, self.template_name, context)
 
@@ -114,7 +163,7 @@ class PaperUpdateView(PaperFormBaseView):
         self.paper = get_object_or_404(
             Paper.objects.select_related('event', 'user'),
             pk=kwargs['pk'],
-            event_id=kwargs['event_pk'],
+            user=request.user,
         )
         self.event = self.paper.event
         return super().dispatch(request, *args, **kwargs)
@@ -126,7 +175,7 @@ class PaperUpdateView(PaperFormBaseView):
             'submit_label': 'Salvar alterações',
             'back_url': reverse(
                 'paper_detail',
-                kwargs={'event_pk': self.event.pk, 'pk': self.paper.pk},
+                kwargs={'pk': self.paper.pk},
             ),
             'back_label': 'Voltar ao trabalho',
             'main_author': self.get_main_author(self.paper.user),
@@ -161,8 +210,45 @@ class PaperUpdateView(PaperFormBaseView):
         coauthor_formset.save()
         return redirect(
             'paper_detail',
-            event_pk=self.event.pk,
             pk=self.paper.pk,
         )
 
 
+class SubmissionCreateView(View):
+    def get(self, request: HttpRequest, pk: int):
+        paper = get_object_or_404(
+            Paper,
+            pk=pk,
+            user=request.user,
+        )
+        form = SubmissionForm()
+        context = {
+            'paper': paper,
+            'form': form,
+        }
+        return render(request, 'papers/submission_modal.html', context)
+
+    def post(self, request: HttpRequest, pk: int):
+        paper = get_object_or_404(
+            Paper,
+            pk=pk,
+            user=request.user,
+        )
+        form = SubmissionForm(request.POST, request.FILES)
+        if not form.is_valid():
+            context = {
+                'paper': paper,
+                'form': form,
+            }
+            return render(
+                request, 'components/django_form/index.html', context
+            )
+        submission: Submission = form.save(commit=False)
+        submission.paper = paper
+        submission.save()
+        response = HttpResponse('')
+        response.headers['HX-Redirect'] = reverse(
+            'paper_detail',
+            kwargs={'pk': paper.pk},
+        )
+        return response

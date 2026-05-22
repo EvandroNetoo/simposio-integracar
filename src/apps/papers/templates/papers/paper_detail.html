@@ -12,13 +12,13 @@
             </div>
 
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <a href="{% url 'paper_change' event_pk=event.pk pk=paper.pk %}"
+                <a href="{% url 'paper_change' pk=paper.pk %}"
                    class="btn btn-primary gap-2">
                     <i class="ph ph-pencil-simple text-lg"></i>
                     Editar trabalho
                 </a>
-                <a href="{% url 'event_detail' event.pk %}" class="btn btn-ghost">
-                    Voltar ao evento
+                <a href="{% url 'paper_list' %}" class="btn btn-ghost">
+                    Voltar aos trabalhos
                 </a>
             </div>
         </div>
@@ -119,6 +119,127 @@
 
                 {% endif %}
             </div>
+        </div>
+
+        <div class="bg-base-100 border border-base-300 rounded-lg p-6 shadow-sm space-y-4">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-base font-semibold">Submissões</h2>
+                    <p class="text-sm text-base-content/60">
+                        Historico de envios e revisoes do trabalho.
+                    </p>
+                </div>
+                <div>
+                    <button class="btn btn-secondary btn-sm gap-2"
+                            hx-get="{% url 'submission_create' pk=paper.pk %}"
+                            hx-target="body"
+                            hx-swap="beforeend">
+                        <i class="ph ph-upload-simple text-lg"></i>
+                        Nova submissão
+                    </button>
+                </div>
+            </div>
+
+            <ul class="steps steps-vertical">
+
+                {% for item in submission_items %}
+
+                    <li class="step step-primary">
+                        <details class="collapse collapse-arrow border border-base-300 bg-base-100 ml-6 w-[calc(100%-1.5rem)]">
+                            <summary class="collapse-title text-sm font-medium">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <div class="space-y-1">
+                                        <p class="text-xs text-base-content/60">
+                                            Enviada em {{ item.submission.created_at|date:"d/m/Y H:i" }}
+                                        </p>
+                                    </div>
+                                    <span class="badge badge-ghost badge-sm">
+                                        {{ item.reviews|length }} revisões
+                                    </span>
+                                </div>
+                            </summary>
+                            <div class="collapse-content text-sm">
+                                <div class="space-y-3">
+                                    <div class="space-y-1">
+                                        <p class="text-base-content/70">Arquivo</p>
+                                        <a class="link link-primary break-all"
+                                           href="{{ item.submission.file.url }}"
+                                           target="_blank">
+                                            Vizualizar arquivo enviado
+                                        </a>
+                                    </div>
+
+                                    {% if item.submission.observations %}
+
+                                        <div class="space-y-1">
+                                            <p class="text-base-content/70">Observacoes</p>
+                                            <p class="text-base-content/80 whitespace-pre-line">
+                                                {{ item.submission.observations }}
+                                            </p>
+                                        </div>
+
+                                    {% endif %}
+                                </div>
+
+                                <div class="divider my-3"></div>
+
+                                <div class="space-y-2">
+                                    <h3 class="text-sm font-semibold">Reviews</h3>
+
+                                    {% if item.reviews %}
+
+                                        <ul class="space-y-2">
+
+                                            {% for review in item.reviews %}
+
+                                                <li class="rounded-lg border border-base-300 bg-base-100 p-3 space-y-2">
+                                                    <div class="flex flex-wrap items-center gap-2">
+                                                        <p class="text-sm font-medium">
+                                                            {{ review.assignment.reviewer.user.full_name|default:review.assignment.reviewer.user.email }}
+                                                        </p>
+                                                        <span class="badge badge-outline badge-sm">
+                                                            {{ review.get_recommendation_display }}
+                                                        </span>
+
+                                                        {% if review.score %}
+
+                                                            <span class="badge badge-ghost badge-sm">Nota {{ review.score }}</span>
+
+                                                        {% endif %}
+                                                        <span class="text-xs text-base-content/60">
+                                                            {{ review.submitted_at|date:"d/m/Y H:i" }}
+                                                        </span>
+                                                    </div>
+                                                    <p class="text-sm text-base-content/70 whitespace-pre-line">
+                                                        {{ review.comments_to_author }}
+                                                    </p>
+                                                </li>
+
+                                            {% endfor %}
+                                        </ul>
+
+                                    {% else %}
+
+                                        <p class="text-xs text-base-content/60">
+                                            Nenhuma revisão enviada para esta submissão.
+                                        </p>
+
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </details>
+                    </li>
+
+                {% empty %}
+
+                    <li class="step">
+                        <div class="rounded-lg border border-dashed border-base-300 bg-base-100 px-4 py-3 text-sm text-base-content/60 ml-6 w-[calc(100%-1.5rem)]">
+                            Nenhuma submissao enviada ate o momento.
+                        </div>
+                    </li>
+
+                {% endfor %}
+            </ul>
         </div>
     </section>
 

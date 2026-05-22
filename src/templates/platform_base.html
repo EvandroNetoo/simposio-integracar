@@ -70,27 +70,43 @@
                    class="drawer-overlay"></label>
             <aside class="bg-base-100 min-h-full w-72 p-4 flex flex-col">
                 <div class="flex items-center gap-2 mb-6 px-2">
-                    <span class="font-bold text-sm flex items-center gap-2 text-xl">
+                    <span class="font-bold flex items-center gap-2 text-xl">
                         Simpósio IntegraCAR
                     </span>
                 </div>
 
-                <ul class="menu w-full flex-1">
-                    <li>
-                        {# djlint:off #}
-                        <a href="{% url 'event_list' %}" class=" 
-                            {% if request.resolver_match.route|startswith:'eventos/' %}
-                                 bg-primary text-primary-content font-bold 
-                            {% endif %}">
-                            <i class="ph{% if request.resolver_match.route|startswith:'eventos/' %}-fill text-secondary {% endif %} ph-presentation text-lg">
-                            </i>
-                            Eventos
-                        </a>
+                {% with current_url=request.resolver_match.url_name %}
 
-                        {# djlint:on #}
-                    </li>
+                    <ul class="menu w-full flex-1">
+                        <li>
+                            {# djlint:off #}
+                            <a href="{% url 'event_list' %}" class=" 
+                                {% if current_url == 'event_list' or current_url == 'event_detail' or current_url == 'event_create' %}
+                                     bg-primary text-primary-content font-bold 
+                                {% endif %}">
+                                <i class="ph{% if current_url == 'event_list' or current_url == 'event_detail' or current_url == 'event_create' %}-fill text-secondary {% endif %} ph-presentation text-lg">
+                                </i>
+                                Eventos
+                            </a>
 
-                </ul>
+                            {# djlint:on #}
+                        </li>
+                        <li>
+                            {# djlint:off #}
+                            <a href="{% url 'paper_list' %}" class=" 
+                                {% if current_url == 'paper_list' or current_url == 'paper_detail' or current_url == 'paper_change' or current_url == 'paper_create' %}
+                                     bg-primary text-primary-content font-bold 
+                                {% endif %}">
+                                <i class="ph{% if current_url == 'paper_list' or current_url == 'paper_detail' or current_url == 'paper_change' or current_url == 'paper_create' %}-fill text-secondary {% endif %} ph-file-text text-lg">
+                                </i>
+                                Meus trabalhos
+                            </a>
+
+                            {# djlint:on #}
+                        </li>
+                    </ul>
+
+                {% endwith %}
 
                 <div class="px-2 py-4 text-xs text-base-content/50">
                     <div class="dropdown dropdown-top dropdown-center flex">

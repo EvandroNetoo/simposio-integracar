@@ -3,7 +3,7 @@ from django import forms
 from django.forms import inlineformset_factory
 
 from core.mixins import NoRequiredAttrFormMixin
-from papers.models import Coauthor, Paper
+from papers.models import Coauthor, Paper, Submission
 
 
 class PaperForm(NoRequiredAttrFormMixin, forms.ModelForm):
@@ -57,3 +57,18 @@ CoauthorFormSet = inlineformset_factory(
     extra=0,
     can_delete=True,
 )
+
+
+class SubmissionForm(NoRequiredAttrFormMixin, forms.ModelForm):
+    class Meta:
+        model = Submission
+        fields = ['file', 'observations']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['file'].widget.attrs['accept'] = '.pdf'
+        self.fields['observations'].widget.attrs['placeholder'] = (
+            'Observações sobre a submissão (opcional)'
+        )
+        self.fields['observations'].widget.attrs['rows'] = 2
