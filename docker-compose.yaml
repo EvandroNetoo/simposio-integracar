@@ -8,6 +8,8 @@ services:
     restart: unless-stopped
     volumes:
       - sqlite_data:/code/data
+      - media_data:/code/src/media
+      - staticfiles_data:/code/src/staticfiles
     networks:
       - app-network
       - proxy
@@ -21,3 +23,5 @@ networks:
 
 volumes:
   sqlite_data:
+  media_data:
+  staticfiles_data:

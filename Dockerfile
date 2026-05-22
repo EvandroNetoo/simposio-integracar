@@ -32,7 +32,7 @@ WORKDIR /code
 
 COPY --from=python-builder /code /code
 
-RUN mkdir -p data media logs src/staticfiles
+RUN mkdir -p data logs src/media src/staticfiles
 
 COPY start.sh /start
 RUN chmod +x /start
