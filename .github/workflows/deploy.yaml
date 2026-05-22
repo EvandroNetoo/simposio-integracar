@@ -3,7 +3,7 @@ name: Deploy to Production
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 concurrency:
@@ -35,6 +35,6 @@ jobs:
             set -e
             cd simposio-integracar
             git fetch origin
-            git reset --hard origin/main
+            git reset --hard origin/master
             sudo docker compose down
             sudo docker compose up --build -d --remove-orphans
