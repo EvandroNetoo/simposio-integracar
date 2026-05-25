@@ -1,7 +1,7 @@
 from accounts.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
-from events.models import Event
+from events.models import EixoTematico, Event
 
 
 class Paper(models.Model):
@@ -10,6 +10,12 @@ class Paper(models.Model):
     )
     event = models.ForeignKey(
         Event, models.CASCADE, related_name='papers', verbose_name='evento'
+    )
+    eixo_tematico = models.ForeignKey(
+        EixoTematico,
+        models.PROTECT,
+        related_name='papers',
+        verbose_name='eixo temático',
     )
     title = models.CharField(max_length=255, verbose_name='título')
     abstract = models.TextField(verbose_name='resumo')
@@ -21,6 +27,18 @@ class Paper(models.Model):
 
     def __str__(self):
         return self.title
+
+    def clean(self):
+        if (
+            self.event_id
+            and self.eixo_tematico_id
+            and self.eixo_tematico.event_id != self.event_id
+        ):
+            raise ValidationError({
+                'eixo_tematico': (
+                    'Selecione um eixo temático do evento escolhido.'
+                )
+            })
 
 
 class Coauthor(models.Model):

@@ -53,7 +53,7 @@ class PaperListView(View):
         papers = (
             Paper.objects
             .filter(user=request.user)
-            .select_related('event')
+            .select_related('event', 'eixo_tematico')
             .prefetch_related('coauthors')
             .order_by('-created_at')
         )
@@ -117,7 +117,7 @@ class PaperCreateView(PaperFormBaseView):
         }
 
     def get(self, request: HttpRequest, **kwargs):
-        form = self.form_class()
+        form = self.form_class(event=self.event)
         coauthor_formset = self.build_formset()
         return self.render_form(
             request,
@@ -128,7 +128,11 @@ class PaperCreateView(PaperFormBaseView):
 
     def post(self, request: HttpRequest, **kwargs):
         paper = Paper(user=request.user, event=self.event)
-        form = self.form_class(request.POST, instance=paper)
+        form = self.form_class(
+            request.POST,
+            event=self.event,
+            instance=paper,
+        )
         coauthor_formset = self.build_formset(
             request.POST,
             instance=paper,
@@ -154,9 +158,11 @@ class PaperDetailView(View):
 
     def get(self, request: HttpRequest, pk: int):
         paper = get_object_or_404(
-            Paper.objects.select_related('event', 'user').prefetch_related(
-                'coauthors__user'
-            ),
+            Paper.objects.select_related(
+                'event',
+                'eixo_tematico',
+                'user',
+            ).prefetch_related('coauthors__user'),
             pk=pk,
             user=request.user,
         )
@@ -201,7 +207,7 @@ class PaperDetailView(View):
 class PaperUpdateView(PaperFormBaseView):
     def dispatch(self, request, *args, **kwargs):
         self.paper = get_object_or_404(
-            Paper.objects.select_related('event', 'user'),
+            Paper.objects.select_related('event', 'eixo_tematico', 'user'),
             pk=kwargs['pk'],
             user=request.user,
         )
@@ -223,7 +229,7 @@ class PaperUpdateView(PaperFormBaseView):
         }
 
     def get(self, request: HttpRequest, **kwargs):
-        form = self.form_class(instance=self.paper)
+        form = self.form_class(event=self.event, instance=self.paper)
         coauthor_formset = self.build_formset(instance=self.paper)
         return self.render_form(
             request,
@@ -233,7 +239,11 @@ class PaperUpdateView(PaperFormBaseView):
         )
 
     def post(self, request: HttpRequest, **kwargs):
-        form = self.form_class(request.POST, instance=self.paper)
+        form = self.form_class(
+            request.POST,
+            event=self.event,
+            instance=self.paper,
+        )
         coauthor_formset = self.build_formset(
             request.POST,
             instance=self.paper,

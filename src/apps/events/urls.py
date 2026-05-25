@@ -12,4 +12,9 @@ urlpatterns = [
         views.EventDetailView.as_view(),
         name='event_detail',
     ),
+    path(
+        'eventos/<int:pk>/editar',
+        views.EventUpdateView.as_view(),
+        name='event_update',
+    ),
 ]

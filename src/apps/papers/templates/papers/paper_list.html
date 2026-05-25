@@ -47,6 +47,9 @@
                                         <p class="text-xs text-base-content/60">
                                             {{ paper.event.name }} · Edicao {{ paper.event.edition }} · {{ paper.event.year }}
                                         </p>
+                                        <p class="text-xs text-base-content/60">
+                                            Eixo temático: {{ paper.eixo_tematico.name }}
+                                        </p>
                                         <p class="text-sm text-base-content/70">
                                             {{ paper.abstract|truncatewords:28 }}
                                         </p>

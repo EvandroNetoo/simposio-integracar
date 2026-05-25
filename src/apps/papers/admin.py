@@ -27,16 +27,18 @@ class SubmissionInline(admin.StackedInline):
 
 @admin.register(Paper)
 class PaperAdmin(admin.ModelAdmin):
-    list_display = ('title', 'user', 'created_at')
-    list_filter = ('created_at',)
+    list_display = ('title', 'event', 'eixo_tematico', 'user', 'created_at')
+    list_filter = ('event', 'eixo_tematico', 'created_at')
     search_fields = (
         'title',
+        'event__name',
+        'eixo_tematico__name',
         'user__email',
         'user__first_name',
         'user__surname',
     )
-    autocomplete_fields = ('user',)
-    list_select_related = ('user',)
+    autocomplete_fields = ('event', 'eixo_tematico', 'user')
+    list_select_related = ('event', 'eixo_tematico', 'user')
     date_hierarchy = 'created_at'
     ordering = ('-created_at',)
     readonly_fields = ('created_at',)
@@ -48,6 +50,8 @@ class PaperAdmin(admin.ModelAdmin):
                 'fields': (
                     'title',
                     'abstract',
+                    'event',
+                    'eixo_tematico',
                     'user',
                 )
             },

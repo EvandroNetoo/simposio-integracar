@@ -81,10 +81,10 @@
                         <li>
                             {# djlint:off #}
                             <a href="{% url 'event_list' %}" class=" 
-                                {% if current_url == 'event_list' or current_url == 'event_detail' or current_url == 'event_create' %}
+                                {% if current_url == 'event_list' or current_url == 'event_detail' or current_url == 'event_create' or current_url == 'event_update' %}
                                      bg-primary text-primary-content font-bold 
                                 {% endif %}">
-                                <i class="ph{% if current_url == 'event_list' or current_url == 'event_detail' or current_url == 'event_create' %}-fill text-secondary {% endif %} ph-presentation text-lg">
+                                <i class="ph{% if current_url == 'event_list' or current_url == 'event_detail' or current_url == 'event_create' or current_url == 'event_update' %}-fill text-secondary {% endif %} ph-presentation text-lg">
                                 </i>
                                 Eventos
                             </a>

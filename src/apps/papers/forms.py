@@ -1,6 +1,7 @@
 from accounts.models import User
 from django import forms
 from django.forms import inlineformset_factory
+from events.models import EixoTematico
 
 from core.mixins import NoRequiredAttrFormMixin
 from papers.models import Coauthor, Paper, Submission
@@ -9,16 +10,32 @@ from papers.models import Coauthor, Paper, Submission
 class PaperForm(NoRequiredAttrFormMixin, forms.ModelForm):
     class Meta:
         model = Paper
-        fields = ['title', 'abstract']
+        fields = ['title', 'eixo_tematico', 'abstract']
 
     def __init__(self, *args, **kwargs):
+        self.event = kwargs.pop('event', None)
         super().__init__(*args, **kwargs)
+
+        eixo_field = self.fields['eixo_tematico']
+        eixo_field.required = True
+        eixo_field.empty_label = 'Selecione um eixo temático'
+        eixo_field.queryset = EixoTematico.objects.none()
+        if self.event:
+            eixo_field.queryset = self.event.eixos_tematicos.order_by('name')
 
         self.fields['title'].widget.attrs['placeholder'] = 'Título do trabalho'
         self.fields['abstract'].widget.attrs['placeholder'] = (
             'Resumo do trabalho'
         )
         self.fields['abstract'].widget.attrs['rows'] = 2
+
+    def clean_eixo_tematico(self):
+        eixo_tematico = self.cleaned_data['eixo_tematico']
+        if self.event and eixo_tematico.event_id != self.event.pk:
+            raise forms.ValidationError(
+                'Selecione um eixo temático do evento escolhido.'
+            )
+        return eixo_tematico
 
 
 class CoauthorForm(NoRequiredAttrFormMixin, forms.ModelForm):

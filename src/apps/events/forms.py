@@ -1,7 +1,8 @@
 from django import forms
+from django.forms import inlineformset_factory
 
 from core.mixins import NoRequiredAttrFormMixin
-from events.models import Event
+from events.models import EixoTematico, Event
 
 
 class EventForm(forms.ModelForm, NoRequiredAttrFormMixin):
@@ -22,20 +23,25 @@ class EventForm(forms.ModelForm, NoRequiredAttrFormMixin):
             'blind_review',
         ]
         widgets = {
-            'submission_period_start': forms.DateInput(
-                attrs={'type': 'datetime-local'}
+            'submission_period_start': forms.DateTimeInput(
+                attrs={'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M',
             ),
-            'submission_period_end': forms.DateInput(
-                attrs={'type': 'datetime-local'}
+            'submission_period_end': forms.DateTimeInput(
+                attrs={'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M',
             ),
-            'evaluation_period_start': forms.DateInput(
-                attrs={'type': 'datetime-local'}
+            'evaluation_period_start': forms.DateTimeInput(
+                attrs={'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M',
             ),
-            'evaluation_period_end': forms.DateInput(
-                attrs={'type': 'datetime-local'}
+            'evaluation_period_end': forms.DateTimeInput(
+                attrs={'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M',
             ),
-            'results_publication_date': forms.DateInput(
-                attrs={'type': 'datetime-local'}
+            'results_publication_date': forms.DateTimeInput(
+                attrs={'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M',
             ),
         }
 
@@ -55,3 +61,27 @@ class EventForm(forms.ModelForm, NoRequiredAttrFormMixin):
         self.fields['submission_rules'].widget.attrs['rows'] = 1
 
         self.fields['edition'].widget.attrs.update({'inputmode': 'numeric'})
+
+
+class EixoTematicoForm(NoRequiredAttrFormMixin, forms.ModelForm):
+    class Meta:
+        model = EixoTematico
+        fields = ['name']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['name'].widget.attrs['placeholder'] = (
+            'Digite o nome do eixo temático'
+        )
+
+
+EixoTematicoFormSet = inlineformset_factory(
+    Event,
+    EixoTematico,
+    form=EixoTematicoForm,
+    fields=['name'],
+    extra=1,
+    can_delete=True,
+    min_num=1,
+    validate_min=True,
+)

@@ -5,11 +5,23 @@
     <section class="space-y-4">
         <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
-                <h1 class="text-2xl font-bold">Adicionar Evento</h1>
+                <h1 class="text-2xl font-bold">
+                    {{ page_title|default:"Adicionar Evento" }}
+                </h1>
                 <p class="text-sm text-base-content/70">
-                    Preencha os dados para criar um novo evento.
+                    {{ page_subtitle|default:"Preencha os dados para criar um novo evento." }}
                 </p>
             </div>
+
+            {% if back_url %}
+
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <a href="{{ back_url }}" class="btn btn-ghost">
+                        {{ back_label|default:"Voltar" }}
+                    </a>
+                </div>
+
+            {% endif %}
         </div>
 
         <div class="card bg-base-100 border border-base-300 shadow-sm overflow-hidden">
@@ -18,6 +30,19 @@
 
                 <form method="post" class="space-y-6">
                     {% csrf_token %}
+
+                    {% if eixo_formset.non_form_errors %}
+
+                        <div role="alert" class="alert alert-error alert-soft text-sm">
+                            <i class="ph ph-warning-circle text-lg"></i>
+                            <div>
+
+                                {% for error in eixo_formset.non_form_errors %}<p>{{ error }}</p>{% endfor %}
+                            </div>
+                        </div>
+
+                    {% endif %}
+
                     <div class="divider">Informações Gerais</div>
 
                     <div class="grid gap-4 md:grid-cols-2">
@@ -48,8 +73,102 @@
                     <c-django-form.field :field="form.submission_rules" />
                     <c-django-form.field :field="form.blind_review" />
 
+                    <div class="divider">Eixos temáticos</div>
+
+                    <div class="space-y-4"
+                         data-eixo-formset
+                         data-prefix="{{ eixo_formset.prefix }}">
+                        {{ eixo_formset.management_form }}
+
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p class="text-sm font-medium">Lista de eixos</p>
+                                <p class="text-xs text-base-content/60">
+                                    Cadastre pelo menos um eixo temático para receber trabalhos.
+                                </p>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm gap-2" data-eixo-add>
+                                <i class="ph ph-plus text-lg"></i>
+                                Adicionar eixo
+                            </button>
+                        </div>
+
+                        <div class="space-y-3" data-eixo-list>
+
+                            {% for eixo_form in eixo_formset %}
+
+                                <div class="card card-sm bg-base-100 border border-base-300" data-eixo-row>
+                                    <div class="card-body gap-3 p-4">
+                                        <div class="flex flex-wrap items-center justify-between gap-3">
+                                            <span class="badge badge-primary badge-sm" data-eixo-title>
+                                                Eixo {{ forloop.counter }}
+                                            </span>
+                                            <button type="button"
+                                                    class="btn btn-ghost btn-xs text-error gap-2"
+                                                    data-eixo-remove>
+                                                <i class="ph ph-trash text-base"></i>
+                                                Remover
+                                            </button>
+                                        </div>
+
+                                        {% if eixo_form.non_field_errors %}
+
+                                            <div role="alert" class="alert alert-error alert-soft text-sm">
+                                                <i class="ph ph-warning-circle text-lg"></i>
+                                                <div>
+
+                                                    {% for error in eixo_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                                                </div>
+                                            </div>
+
+                                        {% endif %}
+
+                                        <c-django-form.field :field="eixo_form.name" />
+
+                                        <div class="hidden">
+                                            {{ eixo_form.id }}
+                                            {{ eixo_form.DELETE }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                            {% endfor %}
+                        </div>
+
+                        <template id="eixo-empty-template">
+
+                            {% with eixo_form=eixo_formset.empty_form %}
+
+                                <div class="card card-sm bg-base-100 border border-base-300" data-eixo-row>
+                                    <div class="card-body gap-3 p-4">
+                                        <div class="flex flex-wrap items-center justify-between gap-3">
+                                            <span class="badge badge-primary badge-sm" data-eixo-title>Eixo</span>
+                                            <button type="button"
+                                                    class="btn btn-ghost btn-xs text-error gap-2"
+                                                    data-eixo-remove>
+                                                <i class="ph ph-trash text-base"></i>
+                                                Remover
+                                            </button>
+                                        </div>
+
+                                        <c-django-form.field :field="eixo_form.name" />
+
+                                        <div class="hidden">
+                                            {{ eixo_form.id }}
+                                            {{ eixo_form.DELETE }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                            {% endwith %}
+
+                        </template>
+                    </div>
+
                     <div class="card-actions justify-end">
-                        <button type="submit" class="btn btn-primary">Criar Evento</button>
+                        <button type="submit" class="btn btn-primary">
+                            {{ submit_label|default:"Criar Evento" }}
+                        </button>
                     </div>
                 </form>
 
@@ -58,3 +177,72 @@
     </section>
 
 {% endblock platform_content %}
+
+{% block endbody %}
+
+    <script>
+        (function() {
+            const root = document.querySelector('[data-eixo-formset]');
+            if (!root) {
+                return;
+            }
+
+            const list = root.querySelector('[data-eixo-list]');
+            const totalInput = root.querySelector('input[name$="-TOTAL_FORMS"]');
+            const template = root.querySelector('#eixo-empty-template');
+            const addButton = root.querySelector('[data-eixo-add]');
+
+            if (!list || !totalInput || !template || !addButton) {
+                return;
+            }
+
+            function visibleRows() {
+                return Array.from(list.querySelectorAll('[data-eixo-row]')).filter(
+                    (row) => !row.classList.contains('hidden')
+                );
+            }
+
+            function updateTitles() {
+                visibleRows().forEach((row, index) => {
+                    const title = row.querySelector('[data-eixo-title]');
+                    if (title) {
+                        title.textContent = `Eixo ${index + 1}`;
+                    }
+                });
+            }
+
+            function bindRow(row) {
+                const removeButton = row.querySelector('[data-eixo-remove]');
+                const deleteInput = row.querySelector('input[name$="-DELETE"]');
+                if (!removeButton) {
+                    return;
+                }
+                removeButton.addEventListener('click', () => {
+                    if (deleteInput) {
+                        deleteInput.checked = true;
+                        row.classList.add('hidden');
+                    } else {
+                        row.remove();
+                    }
+                    updateTitles();
+                });
+            }
+
+            addButton.addEventListener('click', () => {
+                const index = Number.parseInt(totalInput.value, 10);
+                const html = template.innerHTML.replaceAll('__prefix__', index);
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = html.trim();
+                const row = wrapper.firstElementChild;
+                list.appendChild(row);
+                totalInput.value = index + 1;
+                bindRow(row);
+                updateTitles();
+            });
+
+            list.querySelectorAll('[data-eixo-row]').forEach(bindRow);
+            updateTitles();
+        })();
+    </script>
+
+{% endblock endbody %}

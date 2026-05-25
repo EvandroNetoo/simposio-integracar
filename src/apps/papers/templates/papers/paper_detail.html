@@ -30,6 +30,10 @@
                     <p class="font-medium">{{ paper.user.full_name|default:paper.user.email }}</p>
                 </div>
                 <div class="space-y-1">
+                    <p class="text-base-content/70">Eixo temático</p>
+                    <p class="font-medium">{{ paper.eixo_tematico.name }}</p>
+                </div>
+                <div class="space-y-1">
                     <p class="text-base-content/70">Enviado em</p>
                     <p class="font-medium">{{ paper.created_at|date:"d/m/Y H:i" }}</p>
                 </div>

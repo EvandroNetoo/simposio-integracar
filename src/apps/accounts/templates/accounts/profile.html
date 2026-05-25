@@ -3,7 +3,7 @@
 {% block platform_content %}
 
     <section class="space-y-6">
-        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
                 <div class="flex flex-wrap items-center gap-2">
                     <h1 class="text-2xl font-bold">Meu perfil</h1>
@@ -31,224 +31,37 @@
                     <p class="text-sm text-base-content/70">
                         Depois de salvar, voce sera levado de volta para o envio.
                     </p>
+
+                    {% if incomplete_author_fields %}
+
+                        <p class="mt-2 text-sm">
+                            Pendentes: {{ incomplete_author_fields|join:", " }}.
+                        </p>
+
+                    {% endif %}
                 </div>
             </div>
 
         {% endif %}
 
-        <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
-            <div class="space-y-6">
-                <form method="post"
-                      action="{{ profile_action_url }}"
-                      class="space-y-4"
-                      hx-boost="false">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="profile">
+        <div class="space-y-6">
+            <c-htmx-form url="{{ profile_update_url }}" target="#profile-form" method="post" action="{{ profile_update_url }}">
+                {% csrf_token %}
+                <div id="profile-form">
 
-                    {% if next_url %}
+                    {% include 'accounts/partials/profile_form.html' %}
 
-                        <input type="hidden" name="next" value="{{ next_url }}">
-
-                    {% endif %}
-
-                    <div class="bg-base-100 border border-base-300 rounded-lg p-5 sm:p-6 shadow-sm space-y-6">
-
-                        {% if user_form.non_field_errors or profile_form.non_field_errors %}
-
-                            <div role="alert" class="alert alert-error alert-soft text-sm">
-                                <i class="ph ph-warning-circle text-lg"></i>
-                                <div>
-
-                                    {% for error in user_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
-
-                                    {% for error in profile_form.non_field_errors %}
-                                        <p>{{ error }}</p>
-
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                        {% endif %}
-
-                        <div class="flex flex-col gap-2 border-b border-base-300 pb-4 sm:flex-row sm:items-start sm:justify-between">
-                            <div>
-                                <h2 class="text-lg font-semibold">Dados para autoria</h2>
-                                <p class="text-sm text-base-content/60">
-                                    Os campos marcados com * liberam o envio de trabalhos.
-                                </p>
-                            </div>
-                            <span class="badge badge-primary badge-soft w-fit">Perfil academico</span>
-                        </div>
-
-                        <div class="space-y-6">
-                            <section class="space-y-3">
-                                <h3 class="text-sm font-semibold text-base-content/70">Identificacao</h3>
-                                <div class="grid gap-4 md:grid-cols-2">
-                                    <c-django-form.field :field="user_form.email" />
-                                    <c-django-form.field :field="user_form.first_name" />
-                                    <c-django-form.field :field="user_form.surname" />
-                                    <c-django-form.field :field="profile_form.cpf" />
-                                    <c-django-form.field :field="profile_form.phone" />
-                                </div>
-                            </section>
-
-                            <section class="space-y-3">
-                                <h3 class="text-sm font-semibold text-base-content/70">
-                                    Instituicao e formacao
-                                </h3>
-                                <div class="grid gap-4 md:grid-cols-2">
-                                    <c-django-form.field :field="profile_form.institution" />
-                                    <c-django-form.field :field="profile_form.affiliation_type" />
-                                    <c-django-form.field :field="profile_form.education_level" />
-                                    <c-django-form.field :field="profile_form.academic_title" />
-                                </div>
-                            </section>
-
-                            <section class="space-y-3">
-                                <h3 class="text-sm font-semibold text-base-content/70">
-                                    Localizacao e referencias
-                                </h3>
-                                <div class="grid gap-4 md:grid-cols-2">
-                                    <c-django-form.field :field="profile_form.city" />
-                                    <c-django-form.field :field="profile_form.state" />
-                                    <div class="md:col-span-2">
-                                        <c-django-form.field :field="profile_form.lattes_url" />
-                                    </div>
-                                </div>
-                            </section>
-                        </div>
-
-                        <div class="flex flex-col-reverse gap-2 border-t border-base-300 pt-4 sm:flex-row sm:items-center sm:justify-end">
-                            <button type="submit" class="btn btn-primary gap-2">
-                                <i class="ph ph-floppy-disk text-lg"></i>
-
-                                {% if next_url %}
-
-                                    Salvar e continuar
-
-                                {% else %}
-
-                                    Salvar perfil
-
-                                {% endif %}
-                            </button>
-                        </div>
-                    </div>
-                </form>
-
-                <form method="post"
-                      action="{{ password_action_url }}"
-                      class="space-y-4"
-                      hx-boost="false">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="password">
-
-                    {% if next_url %}
-
-                        <input type="hidden" name="next" value="{{ next_url }}">
-
-                    {% endif %}
-
-                    <div class="bg-base-100 border border-base-300 rounded-lg p-5 sm:p-6 shadow-sm space-y-6">
-
-                        {% if password_form.non_field_errors %}
-
-                            <div role="alert" class="alert alert-error alert-soft text-sm">
-                                <i class="ph ph-warning-circle text-lg"></i>
-                                <div>
-
-                                    {% for error in password_form.non_field_errors %}
-                                        <p>{{ error }}</p>
-
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                        {% endif %}
-
-                        <div>
-                            <h2 class="text-lg font-semibold">Senha de acesso</h2>
-                            <div class="mt-4 grid gap-4 md:grid-cols-3">
-                                <c-django-form.field :field="password_form.old_password" />
-                                <c-django-form.field :field="password_form.new_password1" />
-                                <c-django-form.field :field="password_form.new_password2" />
-                            </div>
-                        </div>
-
-                        <div class="flex justify-end">
-                            <button type="submit" class="btn btn-secondary gap-2">
-                                <i class="ph ph-lock-key text-lg"></i>
-                                Alterar senha
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <aside class="space-y-4 lg:sticky lg:top-6 lg:self-start">
-                <div class="bg-base-100 border border-base-300 rounded-lg p-5 shadow-sm space-y-4">
-                    <div class="flex items-center gap-3">
-                        <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                            <i class="ph ph-identification-card text-xl"></i>
-                        </div>
-                        <div>
-                            <h2 class="font-semibold">Checklist</h2>
-                            <p class="text-xs text-base-content/60">Campos exigidos para autoria.</p>
-                        </div>
-                    </div>
-
-                    {% if incomplete_author_fields %}
-
-                        <div role="alert" class="alert alert-warning alert-soft text-sm">
-                            <i class="ph ph-list-checks text-lg"></i>
-                            <span>
-                                {{ incomplete_author_fields|length }}
-                                campo{{ incomplete_author_fields|length|pluralize }} pendente{{ incomplete_author_fields|length|pluralize }}.
-                            </span>
-                        </div>
-                        <ul class="space-y-2 text-sm">
-
-                            {% for field_label in incomplete_author_fields %}
-
-                                <li class="flex items-center gap-2">
-                                    <i class="ph ph-circle text-xs text-warning"></i>
-                                    <span>{{ field_label }}</span>
-                                </li>
-
-                            {% endfor %}
-                        </ul>
-
-                    {% else %}
-
-                        <div role="alert" class="alert alert-success alert-soft text-sm">
-                            <i class="ph ph-check-circle text-lg"></i>
-                            <span>Campos obrigatorios preenchidos.</span>
-                        </div>
-
-                    {% endif %}
                 </div>
+            </c-htmx-form>
 
-                {% if next_url %}
+            <c-htmx-form url="{{ password_update_url }}" target="#password-form" method="post" action="{{ password_update_url }}">
+                {% csrf_token %}
+                <div id="password-form">
 
-                    <div class="bg-base-100 border border-base-300 rounded-lg p-5 shadow-sm space-y-3">
-                        <div class="flex items-center gap-3">
-                            <div class="flex size-10 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
-                                <i class="ph ph-paper-plane-tilt text-xl"></i>
-                            </div>
-                            <div>
-                                <h2 class="font-semibold">Proximo passo</h2>
-                                <p class="text-xs text-base-content/60">
-                                    Envio de trabalho aguardando o perfil.
-                                </p>
-                            </div>
-                        </div>
-                        <p class="text-sm text-base-content/70">
-                            Salve o perfil para continuar automaticamente.
-                        </p>
-                    </div>
+                    {% include 'accounts/partials/password_form.html' %}
 
-                {% endif %}
-            </aside>
+                </div>
+            </c-htmx-form>
         </div>
     </section>
 
@@ -302,6 +115,10 @@
             function bootProfileMasks() {
                 applyProfileMasks(document);
             }
+
+            document.body.addEventListener('htmx:afterSwap', function(event) {
+                applyProfileMasks(event.target);
+            });
 
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', bootProfileMasks);
