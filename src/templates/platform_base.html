@@ -116,6 +116,12 @@
                         </div>
                         <ul tabindex="-1"
                             class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
+                            <li>
+                                <a href="{% url 'profile' %}">
+                                    <i class="ph ph-user-circle text-lg"></i>
+                                    Meu perfil
+                                </a>
+                            </li>
                             <li class="text-error">
                                 <a hx-post="{% url 'signout' %}"
                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>

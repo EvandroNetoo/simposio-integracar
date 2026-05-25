@@ -1,7 +1,10 @@
+from accounts.models import Profile, User
+from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
 from django.http.request import HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
+from django.utils.decorators import method_decorator
 from django.views import View
 from events.models import Event
 from reviews.models import Review
@@ -61,6 +64,43 @@ class PaperListView(View):
         return render(request, self.template_name, context)
 
 
+def user_can_submit_paper(user: User) -> bool:
+    try:
+        profile = user.profile
+    except Profile.DoesNotExist:
+        return False
+
+    required_values = [
+        user.email,
+        user.first_name,
+        user.surname,
+        profile.cpf,
+        profile.phone,
+        profile.institution,
+        profile.affiliation_type,
+        profile.education_level,
+        profile.academic_title,
+        profile.state,
+        profile.city,
+        profile.lattes_url,
+    ]
+
+    return all(
+        value is not None and bool(str(value).strip())
+        for value in required_values
+    )
+
+
+@method_decorator(
+    user_passes_test(
+        user_can_submit_paper,
+        reverse_lazy(
+            'profile',
+            query={'verify_author_fields': 'true'},
+        ),
+    ),
+    name='dispatch',
+)
 class PaperCreateView(PaperFormBaseView):
     def dispatch(self, request, *args, **kwargs):
         self.event = get_object_or_404(Event, pk=kwargs['event_pk'])

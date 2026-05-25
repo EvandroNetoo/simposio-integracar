@@ -1,8 +1,16 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, BaseUserCreationForm
+from django.contrib.auth.forms import (
+    AuthenticationForm,
+    BaseUserCreationForm,
+    PasswordChangeForm,
+)
 
-from accounts.models import User
+from accounts.models import Profile, User
 from core.mixins import NoRequiredAttrFormMixin
+
+FIELD_CANNOT_BE_EMPTY = (
+    'Este campo ja foi preenchido e nao pode ficar em branco.'
+)
 
 
 class SignupForm(NoRequiredAttrFormMixin, BaseUserCreationForm):
@@ -39,7 +47,7 @@ class SignupForm(NoRequiredAttrFormMixin, BaseUserCreationForm):
 class SigninForm(NoRequiredAttrFormMixin, AuthenticationForm):
     def get_invalid_login_error(self):
         return forms.ValidationError(
-            'Credenciais inválidas.',
+            'Credenciais invalidas.',
         )
 
     def clean_username(self):
@@ -59,177 +67,131 @@ class SigninForm(NoRequiredAttrFormMixin, AuthenticationForm):
             field.widget.attrs['placeholder'] = placeholders[field_name]
 
 
-class WidgetsShowcaseForm(NoRequiredAttrFormMixin, forms.Form):
-    text = forms.CharField(
-        label='Texto',
-        help_text='Digite de 3 a 40 caracteres.',
-        min_length=3,
-        max_length=40,
-    )
+class UserProfileForm(NoRequiredAttrFormMixin, forms.ModelForm):
     email = forms.EmailField(
-        label='Email',
-        help_text='Use um email valido (ex: nome@ifes.edu.br).',
-    )
-    url = forms.URLField(
-        label='URL',
+        label='E-mail',
+        disabled=True,
         required=False,
-        help_text='Opcional. Ex: https://www.ifes.edu.br',
-    )
-    number = forms.IntegerField(
-        label='Numero',
-        help_text='Apenas numeros inteiros entre 1 e 10.',
-        min_value=1,
-        max_value=10,
-    )
-    decimal = forms.DecimalField(
-        label='Decimal',
-        help_text='Exemplo: 12.50 (ate 2 casas).',
-        max_digits=6,
-        decimal_places=2,
-    )
-    password = forms.CharField(
-        label='Senha',
-        help_text='Minimo de 6 caracteres.',
-        min_length=6,
-        widget=forms.PasswordInput,
-    )
-    textarea = forms.CharField(
-        label='Mensagem',
-        help_text='Escreva uma mensagem curta.',
-        widget=forms.Textarea,
     )
 
-    date = forms.DateField(
-        label='Data',
-        help_text='Escolha uma data.',
-        widget=forms.DateInput(attrs={'type': 'date'}),
-    )
-    datetime = forms.DateTimeField(
-        label='Data e hora',
-        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-        help_text='Escolha data e hora.',
-    )
-    time = forms.TimeField(
-        label='Hora',
-        help_text='Escolha um horario.',
-        widget=forms.TimeInput(attrs={'type': 'time'}),
+    class Meta:
+        model = User
+        fields = [
+            'first_name',
+            'surname',
+        ]
+        labels = {
+            'first_name': 'Nome',
+            'surname': 'Sobrenome',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].initial = self.instance.email
+        self.fields['email'].widget.attrs['readonly'] = True
+        self.fields['first_name'].required = True
+        self.fields['surname'].required = True
+
+
+class ProfileForm(NoRequiredAttrFormMixin, forms.ModelForm):
+    required_fields = (
+        'cpf',
+        'phone',
+        'institution',
+        'affiliation_type',
+        'education_level',
+        'academic_title',
+        'city',
+        'state',
+        'lattes_url',
     )
 
-    checkbox = forms.BooleanField(
-        label='Aceito os termos',
-        help_text='Obrigatorio para continuar.',
-    )
-    radio = forms.ChoiceField(
-        label='Opcao (radio)',
-        help_text='Selecione uma opcao.',
-        widget=forms.RadioSelect,
-        choices=[('a', 'Opcao A'), ('b', 'Opcao B')],
-    )
-    select = forms.ChoiceField(
-        label='Selecao',
-        help_text='Escolha uma opcao da lista.',
-        choices=[('1', 'Um'), ('2', 'Dois'), ('3', 'Tres')],
-    )
-    select_multiple = forms.MultipleChoiceField(
-        label='Selecao multipla',
-        widget=forms.SelectMultiple,
-        choices=[('1', 'Um'), ('2', 'Dois'), ('3', 'Tres')],
-        help_text='Selecione uma ou mais opcoes.',
-    )
-
-    file = forms.FileField(
-        label='Arquivo',
-        required=False,
-        help_text='Envie qualquer arquivo (opcional).',
-    )
-    image = forms.ImageField(
-        label='Imagem',
-        required=False,
-        help_text='Envie uma imagem (opcional).',
-    )
-
-    hidden = forms.CharField(
-        label='Oculto',
-        widget=forms.HiddenInput,
-        required=False,
-        initial='valor-oculto',
-    )
+    class Meta:
+        model = Profile
+        fields = [
+            'cpf',
+            'phone',
+            'institution',
+            'affiliation_type',
+            'education_level',
+            'academic_title',
+            'city',
+            'state',
+            'lattes_url',
+        ]
+        widgets = {
+            'state': forms.TextInput(attrs={'maxlength': 2}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields['text'].error_messages.update(
-            {
-                'required': 'Texto e obrigatorio.',
-                'min_length': 'Texto muito curto.',
-                'max_length': 'Texto muito longo.',
-            },
-        )
-        self.fields['email'].error_messages.update(
-            {
-                'required': 'Email e obrigatorio.',
-                'invalid': 'Email invalido.',
-            },
-        )
-        self.fields['url'].error_messages.update({'invalid': 'URL invalida.'})
-        self.fields['number'].error_messages.update(
-            {
-                'required': 'Numero e obrigatorio.',
-                'min_value': 'O numero deve ser maior ou igual a 1.',
-                'max_value': 'O numero deve ser menor ou igual a 10.',
-                'invalid': 'Digite um numero inteiro valido.',
-            },
-        )
-        self.fields['decimal'].error_messages.update(
-            {
-                'required': 'Decimal e obrigatorio.',
-                'invalid': 'Decimal invalido.',
-                'max_digits': 'Numero com muitos digitos.',
-                'max_decimal_places': 'Use no maximo 2 casas decimais.',
-                'max_whole_digits': 'Use no maximo 4 digitos inteiros.',
-            },
-        )
-        self.fields['password'].error_messages.update(
-            {
-                'required': 'Senha e obrigatoria.',
-                'min_length': 'Senha muito curta.',
-            },
-        )
-        self.fields['textarea'].error_messages.update(
-            {'required': 'Mensagem e obrigatoria.'},
-        )
-        self.fields['date'].error_messages.update(
-            {'required': 'Data e obrigatoria.', 'invalid': 'Data invalida.'},
-        )
-        self.fields['datetime'].error_messages.update(
-            {
-                'required': 'Data e hora e obrigatoria.',
-                'invalid': 'Data e hora invalida.',
-            },
-        )
-        self.fields['time'].error_messages.update(
-            {'required': 'Hora e obrigatoria.', 'invalid': 'Hora invalida.'},
-        )
-        self.fields['checkbox'].error_messages.update(
-            {'required': 'Voce precisa aceitar os termos.'},
-        )
-        self.fields['radio'].error_messages.update(
-            {'required': 'Selecione uma opcao.'},
-        )
-        self.fields['select'].error_messages.update(
-            {'required': 'Selecao obrigatoria.'},
-        )
-        self.fields['select_multiple'].error_messages.update(
-            {'required': 'Selecione ao menos uma opcao.'},
-        )
-        self.fields['file'].error_messages.update(
-            {'invalid': 'Arquivo invalido.'},
-        )
-        self.fields['image'].error_messages.update(
-            {'invalid_image': 'Imagem invalida.'},
-        )
+        placeholders = {
+            'cpf': 'Digite seu CPF ou documento',
+            'phone': 'Digite seu telefone',
+            'institution': 'Digite sua instituicao',
+            'education_level': 'Ex: Bacharel em Sistemas de Informacao, cursando Tecnico em Meio Ambiente, etc',
+            'academic_title': 'Ex: professor, pesquisador, estudante',
+            'city': 'Digite sua cidade',
+            'state': 'UF',
+            'lattes_url': 'https://lattes.cnpq.br/...',
+        }
 
-        self.add_error(
-            None,
-            'Erro de formulario: numero 7 nao e permitido com este texto.',
-        )
+        for field_name, field in self.fields.items():
+            field.required = field_name in self.required_fields
+            field.widget.attrs['placeholder'] = placeholders.get(
+                field_name, ''
+            )
+
+        self.fields['cpf'].widget.attrs.update({
+            'autocomplete': 'off',
+            'data-profile-mask': 'cpf',
+            'inputmode': 'numeric',
+        })
+        self.fields['phone'].widget.attrs.update({
+            'autocomplete': 'off',
+            'data-profile-mask': 'phone',
+            'inputmode': 'tel',
+        })
+        self.fields['state'].widget.attrs.update({
+            'autocomplete': 'off',
+            'data-profile-mask': 'state',
+            'inputmode': 'text',
+            'style': 'text-transform: uppercase;',
+        })
+
+    def clean_state(self):
+        state = self.cleaned_data.get('state') or ''
+        return state.upper()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        errors = {}
+
+        for field_name in self.fields:
+            current_value = getattr(self.instance, field_name, '')
+            new_value = cleaned_data.get(field_name)
+            if current_value and not new_value:
+                errors[field_name] = FIELD_CANNOT_BE_EMPTY
+
+        if errors:
+            raise forms.ValidationError(errors)
+
+        return cleaned_data
+
+
+class CustomPasswordChangeForm(NoRequiredAttrFormMixin, PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        placeholders = {
+            'old_password': 'Digite sua senha atual',
+            'new_password1': 'Digite sua nova senha',
+            'new_password2': 'Confirme sua nova senha',
+        }
+
+        for field_name, field in self.fields.items():
+            field.widget.attrs['placeholder'] = placeholders.get(
+                field_name, ''
+            )
+            field.widget.attrs['autofocus'] = False

@@ -33,6 +33,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = CustomUserManager()
 
+    profile: Profile
+
     class Meta:
         verbose_name = 'usuário'
         verbose_name_plural = 'usuários'
