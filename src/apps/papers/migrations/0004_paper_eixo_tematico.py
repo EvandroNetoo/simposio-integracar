@@ -11,6 +11,7 @@ def assign_first_event_axis(apps, schema_editor):
     event_axis_by_id = {}
     for eixo in EixoTematico.objects.order_by('event_id', 'pk'):
         event_axis_by_id.setdefault(eixo.event_id, eixo.pk)
+
     missing_event_ids = sorted(
         set(
             Paper.objects.filter(
@@ -20,12 +21,12 @@ def assign_first_event_axis(apps, schema_editor):
             .values_list('event_id', flat=True)
         )
     )
-    if missing_event_ids:
-        event_ids = ', '.join(str(event_id) for event_id in missing_event_ids)
-        raise RuntimeError(
-            'Não é possível migrar trabalhos sem eixo temático: '
-            f'os eventos {event_ids} não possuem eixos cadastrados.'
+    for event_id in missing_event_ids:
+        eixo = EixoTematico.objects.create(
+            event_id=event_id,
+            name='Eixo geral',
         )
+        event_axis_by_id[event_id] = eixo.pk
 
     papers = Paper.objects.filter(eixo_tematico__isnull=True)
     for paper in papers.iterator():
