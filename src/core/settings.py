@@ -142,3 +142,8 @@ if DEBUG:
         'ROOT_TAG_EXTRA_ATTRS': 'hx-preserve',
         'UPDATE_ON_FETCH': True,
     }
+
+
+FORCE_SCRIPT_NAME = "/simposio"
+STATIC_URL = "/simposio/static/"
+MEDIA_URL = "/simposio/media/"
