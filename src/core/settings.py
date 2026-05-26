@@ -104,11 +104,11 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 
-STATIC_URL = '/static/'
+STATIC_URL = "/simposio/static/"
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-MEDIA_URL = '/media/'
+MEDIA_URL = "/simposio/media/"
 MEDIA_ROOT = BASE_DIR / 'media'
 
 STORAGES = {
@@ -145,5 +145,3 @@ if DEBUG:
 
 
 FORCE_SCRIPT_NAME = "/simposio"
-STATIC_URL = "/simposio/static/"
-MEDIA_URL = "/simposio/media/"
