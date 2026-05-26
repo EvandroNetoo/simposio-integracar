@@ -104,11 +104,11 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 
-STATIC_URL = "/simposio/static/"
+STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-MEDIA_URL = "/simposio/media/"
+MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / 'media'
 
 STORAGES = {
@@ -142,6 +142,3 @@ if DEBUG:
         'ROOT_TAG_EXTRA_ATTRS': 'hx-preserve',
         'UPDATE_ON_FETCH': True,
     }
-
-
-FORCE_SCRIPT_NAME = "/simposio"
