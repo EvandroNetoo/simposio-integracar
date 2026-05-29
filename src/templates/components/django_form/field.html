@@ -18,11 +18,15 @@
 
     {% if field.field.help_text %}
 
-        <p class="label">{{ field.field.help_text|striptags }}</p>
+        <p class="label" id="{{ field.id_for_label }}_help">
+            {{ field.field.help_text|striptags }}
+        </p>
 
     {% endif %}
 
-    <div class="text-error">
+    <div class="text-error"
+         id="{{ field.id_for_label }}_errors"
+         aria-live="polite">
 
         {% if field.errors %}
 

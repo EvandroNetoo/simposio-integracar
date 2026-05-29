@@ -3,7 +3,16 @@
 {% if field.field.widget|klass == 'CheckboxInput' %}
 
     <label for="{{ field.id_for_label }}" class="flex gap-2 w-fit items-center">
-        {{ field|add_class:'toggle toggle-sm toggle-secondary' }}
+
+        {% if field.errors %}
+
+            {{ field|add_class:'toggle toggle-sm toggle-secondary'|attr:'aria-invalid:true' }}
+
+        {% else %}
+
+            {{ field|add_class:'toggle toggle-sm toggle-secondary' }}
+
+        {% endif %}
 
         <span class="fieldset-legend flex items-center justify-start gap-1">
             {{ field.label }}
@@ -44,19 +53,55 @@
 
 {% elif field.field.widget.input_type == 'file' %}
 
-    {{ field|add_class:'file-input border-secondary w-full' }}
+    {% if field.errors %}
+
+        {{ field|add_class:'file-input w-full'|attr:'aria-invalid:true' }}
+
+    {% else %}
+
+
+        {{ field|add_class:'file-input w-full' }}
+
+    {% endif %}
 
 {% elif field.field.widget.input_type == 'select' %}
 
-    {{ field|add_class:'select select-secondary w-full' }}
+    {% if field.errors %}
+
+        {{ field|add_class:'select w-full'|attr:'aria-invalid:true' }}
+
+    {% else %}
+
+
+        {{ field|add_class:'select w-full' }}
+
+    {% endif %}
 
 {% elif field.field.widget.template_name == 'django/forms/widgets/textarea.html' %}
 
-    {{ field|add_class:'textarea textarea-secondary w-full' }}
+    {% if field.errors %}
+
+        {{ field|add_class:'textarea w-full'|attr:'aria-invalid:true' }}
+
+    {% else %}
+
+
+        {{ field|add_class:'textarea w-full' }}
+
+    {% endif %}
 
 {% else %}
 
 
-    {{ field|add_class:'input input-secondary w-full' }}
+    {% if field.errors %}
+
+        {{ field|add_class:'input w-full'|attr:'aria-invalid:true' }}
+
+    {% else %}
+
+
+        {{ field|add_class:'input w-full' }}
+
+    {% endif %}
 
 {% endif %}

@@ -1,15 +1,18 @@
 <c-vars title="" id="event-modal" />
 
-<dialog id="{{ id }}" class="modal modal-open">
+<dialog id="{{ id }}"
+        class="modal modal-open"
+        aria-labelledby="{{ id }}_title">
     <div class="modal-box w-11/12 max-w-2xl">
 
-        {% if title %}<h3 class="text-lg font-bold">{{ title }}</h3>{% endif %}
+        {% if title %}<h3 id="{{ id }}_title">{{ title }}</h3>{% endif %}
 
         {{ slot }}
 
         <div class="modal-action">
             <form method="dialog" hx-disable>
-                <button class="btn" onclick="document.getElementById('{{ id }}').remove()">
+                <button class="btn btn-ghost"
+                        onclick="document.getElementById('{{ id }}').remove()">
                     Fechar
                 </button>
             </form>

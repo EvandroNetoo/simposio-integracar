@@ -1,0 +1,17 @@
+:root {
+    --color-primary: #366c88;
+    --color-primary-hover: #365a6d;
+    --color-secondary: #9c5c6a;
+    --color-secondary-hover: #7b4a55;
+    --color-informative: #7b7b7a;
+    --color-border: #cfcfcf;
+    --color-text: #585857;
+    --spacing-sm: 10px;
+    --spacing-md: 20px;
+    --input-height: 35px;
+    --rss-line-height: 15px;
+    --font-family: "Open Sans", Arial, sans-serif;
+    --font-heading: 800 20pt/1.25 var(--font-family);
+    --font-section: 700 13pt/1.35 var(--font-family);
+    --font-content: 400 10pt/1.5 var(--font-family);
+}

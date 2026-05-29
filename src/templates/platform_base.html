@@ -11,32 +11,28 @@
 
 {% block content %}
 
-    <div class="drawer lg:drawer-open">
+    <div class="drawer lg:drawer-open gov-platform">
         <input id="drawer-platform" type="checkbox" class="drawer-toggle" />
 
         <div class="drawer-content flex flex-col">
-            <!-- Navbar -->
-            <div class="navbar shadow-sm lg:hidden px-2">
+            <div class="navbar lg:hidden px-2 gov-topbar">
                 <div class="navbar-start">
-                    <label for="drawer-platform" class="btn btn-ghost btn-sm btn-square">
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                             class="h-5 w-5"
-                             fill="none"
-                             viewBox="0 0 24 24"
-                             stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
+                    <label for="drawer-platform"
+                           class="btn btn-ghost btn-sm btn-square"
+                           aria-label="Abrir menu principal">
+                        <i class="ph ph-list text-lg" aria-hidden="true"></i>
                     </label>
                 </div>
                 <div class="navbar-center gap-2">
-                    <img class="h-6 rounded" src="{% static 'img/logo.png' %}" alt="Logo" />
-                    <span class="font-bold text-base">Workstations Colatina</span>
+                    <img class="h-7 rounded"
+                         src="{% static 'img/logo.png' %}"
+                         alt="Simpósio IntegraCAR" />
+                    <span class="font-bold text-base">Simpósio IntegraCAR</span>
                 </div>
                 <div class="navbar-end"></div>
             </div>
 
-            <!-- Conteúdo principal -->
-            <main class="flex-1 p-3 sm:p-4 lg:p-6">
+            <main id="main-content" class="flex-1 gov-content" tabindex="-1">
 
                 {% if messages %}
 
@@ -53,7 +49,7 @@
 
                 {% endif %}
 
-                <div class="max-w-6xl p-1 md:p-4 mx-auto">
+                <div class="gov-content-inner">
 
                     {% block platform_content %}
 
@@ -66,10 +62,15 @@
         <!-- Sidebar -->
         <div class="drawer-side">
             <label for="drawer-platform"
-                   aria-label="fechar sidebar"
+                   aria-label="Fechar menu principal"
                    class="drawer-overlay"></label>
-            <aside class="bg-base-100 min-h-full w-72 p-4 flex flex-col">
-                <div class="flex items-center gap-2 mb-6 px-2">
+            <aside class="gov-sidebar min-h-full w-72 p-4 flex flex-col"
+                   aria-label="Menu principal">
+                <div class="gov-sidebar-brand flex items-center gap-2 mb-6 px-2">
+                    <img class="h-10 w-auto"
+                         src="{% static 'img/logo.png' %}"
+                         alt=""
+                         aria-hidden="true" />
                     <span class="font-bold flex items-center gap-2 text-xl">
                         Simpósio IntegraCAR
                     </span>
@@ -84,7 +85,8 @@
                                 {% if current_url == 'event_list' or current_url == 'event_detail' or current_url == 'event_create' or current_url == 'event_update' %}
                                      bg-primary text-primary-content font-bold 
                                 {% endif %}">
-                                <i class="ph{% if current_url == 'event_list' or current_url == 'event_detail' or current_url == 'event_create' or current_url == 'event_update' %}-fill text-secondary {% endif %} ph-presentation text-lg">
+                                <i class="ph{% if current_url == 'event_list' or current_url == 'event_detail' or current_url == 'event_create' or current_url == 'event_update' %}-fill text-secondary {% endif %} ph-presentation text-lg"
+                                   aria-hidden="true">
                                 </i>
                                 Eventos
                             </a>
@@ -97,7 +99,8 @@
                                 {% if current_url == 'paper_list' or current_url == 'paper_detail' or current_url == 'paper_change' or current_url == 'paper_create' %}
                                      bg-primary text-primary-content font-bold 
                                 {% endif %}">
-                                <i class="ph{% if current_url == 'paper_list' or current_url == 'paper_detail' or current_url == 'paper_change' or current_url == 'paper_create' %}-fill text-secondary {% endif %} ph-file-text text-lg">
+                                <i class="ph{% if current_url == 'paper_list' or current_url == 'paper_detail' or current_url == 'paper_change' or current_url == 'paper_create' %}-fill text-secondary {% endif %} ph-file-text text-lg"
+                                   aria-hidden="true">
                                 </i>
                                 Meus trabalhos
                             </a>
@@ -111,21 +114,21 @@
                 <div class="px-2 py-4 text-xs text-base-content/50">
                     <div class="dropdown dropdown-top dropdown-center flex">
                         <div tabindex="0" role="button" class="btn btn-ghost btn-xs w-full">
-                            <i class="ph ph-user text-base"></i>
+                            <i class="ph ph-user text-base" aria-hidden="true"></i>
                             {{ request.user.full_name|default:request.user.email }}
                         </div>
                         <ul tabindex="-1"
                             class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
                             <li>
                                 <a href="{% url 'profile' %}">
-                                    <i class="ph ph-user-circle text-lg"></i>
+                                    <i class="ph ph-user-circle text-lg" aria-hidden="true"></i>
                                     Meu perfil
                                 </a>
                             </li>
                             <li class="text-error">
                                 <a hx-post="{% url 'signout' %}"
                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-                                    <i class="ph ph-sign-out text-lg"></i>
+                                    <i class="ph ph-sign-out text-lg" aria-hidden="true"></i>
                                     Sair
                                 </a>
                             </li>
