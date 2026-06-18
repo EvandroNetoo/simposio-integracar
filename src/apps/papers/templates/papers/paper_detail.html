@@ -12,11 +12,18 @@
             </div>
 
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <a href="{% url 'paper_change' pk=paper.pk %}"
-                   class="btn btn-primary gap-2">
-                    <i class="ph ph-pencil-simple text-lg"></i>
-                    Editar trabalho
-                </a>
+
+                <span class="badge badge-outline">{{ paper.get_status_display }}</span>
+
+                {% if not has_open_round %}
+
+                    <a href="{% url 'paper_change' pk=paper.pk %}"
+                       class="btn btn-primary gap-2">
+                        <i class="ph ph-pencil-simple text-lg"></i>
+                        Editar trabalho
+                    </a>
+
+                {% endif %}
                 <a href="{% url 'paper_list' %}" class="btn btn-ghost">
                     Voltar aos trabalhos
                 </a>
@@ -134,13 +141,22 @@
                     </p>
                 </div>
                 <div>
-                    <button class="btn btn-secondary btn-sm gap-2"
-                            hx-get="{% url 'submission_create' pk=paper.pk %}"
-                            hx-target="body"
-                            hx-swap="beforeend">
-                        <i class="ph ph-upload-simple text-lg"></i>
-                        Nova submissão
-                    </button>
+
+                    {% if not has_open_round %}
+
+                        <button class="btn btn-secondary btn-sm gap-2"
+                                hx-get="{% url 'submission_create' pk=paper.pk %}"
+                                hx-target="body"
+                                hx-swap="beforeend">
+                            <i class="ph ph-upload-simple text-lg"></i>
+                            Nova submissão
+                        </button>
+
+                    {% else %}
+
+                        <span class="badge badge-warning">Envio bloqueado durante a avaliação</span>
+
+                    {% endif %}
                 </div>
             </div>
 
@@ -154,11 +170,21 @@
                                 <div class="flex flex-wrap items-center justify-between gap-2">
                                     <div class="space-y-1">
                                         <p class="text-xs text-base-content/60">
-                                            Enviada em {{ item.submission.created_at|date:"d/m/Y H:i" }}
+                                            Versão {{ item.submission.version }} · enviada em
+                                            {{ item.submission.created_at|date:"d/m/Y H:i" }}
                                         </p>
                                     </div>
                                     <span class="badge badge-ghost badge-sm">
-                                        {{ item.reviews|length }} revisões
+
+                                        {% if item.round %}
+
+                                            {{ item.round.get_status_display }}
+
+                                        {% else %}
+
+                                            Sem rodada
+
+                                        {% endif %}
                                     </span>
                                 </div>
                             </summary>
@@ -167,9 +193,9 @@
                                     <div class="space-y-1">
                                         <p class="text-base-content/70">Arquivo</p>
                                         <a class="link link-primary break-all"
-                                           href="{{ item.submission.file.url }}"
+                                           href="{% url 'submission_download' pk=item.submission.pk %}"
                                            target="_blank">
-                                            Vizualizar arquivo enviado
+                                            Visualizar arquivo enviado
                                         </a>
                                     </div>
 
@@ -185,51 +211,82 @@
                                     {% endif %}
                                 </div>
 
-                                <div class="divider my-3"></div>
+                                {% if item.round %}
 
-                                <div class="space-y-2">
-                                    <h3 class="text-sm font-semibold">Reviews</h3>
+                                    <div class="divider my-3"></div>
+                                    <div class="space-y-2">
+                                        <h3 class="text-sm font-semibold">
+                                            Pareceres da rodada {{ item.round.number }}
+                                        </h3>
 
-                                    {% if item.reviews %}
+                                        {% if item.round.assignments.all %}
 
-                                        <ul class="space-y-2">
+                                            <ul class="space-y-2">
 
-                                            {% for review in item.reviews %}
+                                                {% for assignment in item.round.assignments.all %}
 
-                                                <li class="rounded-lg border border-base-300 bg-base-100 p-3 space-y-2">
-                                                    <div class="flex flex-wrap items-center gap-2">
-                                                        <p class="text-sm font-medium">
-                                                            {{ review.assignment.reviewer.user.full_name|default:review.assignment.reviewer.user.email }}
-                                                        </p>
-                                                        <span class="badge badge-outline badge-sm">
-                                                            {{ review.get_recommendation_display }}
-                                                        </span>
+                                                    {% if assignment.review %}
 
-                                                        {% if review.score %}
+                                                        <li class="rounded-lg border border-base-300 bg-base-100 p-3 space-y-2">
+                                                            <div class="flex flex-wrap items-center gap-2">
+                                                                <p class="text-sm font-medium">
 
-                                                            <span class="badge badge-ghost badge-sm">Nota {{ review.score }}</span>
+                                                                    {% if event.blind_review %}
 
-                                                        {% endif %}
-                                                        <span class="text-xs text-base-content/60">
-                                                            {{ review.submitted_at|date:"d/m/Y H:i" }}
-                                                        </span>
-                                                    </div>
-                                                    <p class="text-sm text-base-content/70 whitespace-pre-line">
-                                                        {{ review.comments_to_author }}
-                                                    </p>
-                                                </li>
+                                                                        Avaliador anônimo
 
-                                            {% endfor %}
-                                        </ul>
+                                                                    {% else %}
 
-                                    {% else %}
+                                                                        {{ assignment.reviewer.user.full_name|default:assignment.reviewer.user.email }}
 
-                                        <p class="text-xs text-base-content/60">
-                                            Nenhuma revisão enviada para esta submissão.
-                                        </p>
+                                                                    {% endif %}
+                                                                </p>
+                                                                <span class="badge badge-outline badge-sm">
+                                                                    {{ assignment.review.get_recommendation_display }}
+                                                                </span>
+                                                                <span class="badge badge-ghost badge-sm">
+                                                                    Nota {{ assignment.review.weighted_score }}
+                                                                </span>
+                                                                <span class="text-xs text-base-content/60">
+                                                                    {{ assignment.review.updated_at|date:"d/m/Y H:i" }}
+                                                                </span>
+                                                            </div>
+                                                            <p class="text-sm text-base-content/70 whitespace-pre-line">
+                                                                {{ assignment.review.comments_to_author }}
+                                                            </p>
+                                                        </li>
+
+                                                    {% endif %}
+
+                                                {% endfor %}
+                                            </ul>
+
+                                        {% else %}
+
+                                            <p class="text-xs text-base-content/60">
+                                                Nenhuma revisão enviada para esta submissão.
+                                            </p>
+
+                                        {% endif %}
+                                    </div>
+
+                                    {% if item.round.decision %}
+
+                                        <div class="divider my-3"></div>
+                                        <div class="alert alert-info">
+                                            <div>
+                                                <p class="font-semibold">
+                                                    Decisão: {{ item.round.decision.get_result_display }}
+                                                </p>
+                                                <p class="text-sm whitespace-pre-line">
+                                                    {{ item.round.decision.justification }}
+                                                </p>
+                                            </div>
+                                        </div>
 
                                     {% endif %}
-                                </div>
+
+                                {% endif %}
                             </div>
                         </details>
                     </li>

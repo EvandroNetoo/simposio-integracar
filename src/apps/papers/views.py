@@ -7,7 +7,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views import View
 from events.models import Event
-from reviews.models import Review
+from reviews.models import ReviewRound
 
 from papers.forms import CoauthorFormSet, PaperForm, SubmissionForm
 from papers.models import Paper, Submission
@@ -168,38 +168,34 @@ class PaperDetailView(View):
         )
         coauthors = paper.coauthors.select_related('user').all()
         submissions = list(paper.submission_set.all().order_by('created_at'))
-        reviews = list(
-            Review.objects
-            .filter(assignment__paper=paper)
-            .select_related(
-                'assignment__reviewer__user',
-                'assignment',
-            )
-            .order_by('submitted_at')
-        )
-        submission_items = []
-        for index, submission in enumerate(submissions):
-            next_created_at = None
-            if index + 1 < len(submissions):
-                next_created_at = submissions[index + 1].created_at
-            submission_reviews = [
-                review
-                for review in reviews
-                if review.submitted_at >= submission.created_at
-                and (
-                    next_created_at is None
-                    or review.submitted_at < next_created_at
+        rounds_by_submission = {
+            round_.submission_id: round_
+            for round_ in (
+                ReviewRound.objects
+                .filter(paper=paper)
+                .select_related('decision')
+                .prefetch_related(
+                    'assignments__review__criterion_scores__criterion',
+                    'assignments__reviewer__user',
                 )
-            ]
-            submission_items.append({
+                .order_by('number')
+            )
+        }
+        submission_items = [
+            {
                 'submission': submission,
-                'reviews': submission_reviews,
-            })
+                'round': rounds_by_submission.get(submission.pk),
+            }
+            for submission in submissions
+        ]
         context = {
             'paper': paper,
             'event': paper.event,
             'coauthors': coauthors,
             'submission_items': submission_items,
+            'has_open_round': paper.review_rounds.filter(
+                status=ReviewRound.Status.OPEN,
+            ).exists(),
         }
         return render(request, self.template_name, context)
 
@@ -212,6 +208,10 @@ class PaperUpdateView(PaperFormBaseView):
             user=request.user,
         )
         self.event = self.paper.event
+        if self.paper.review_rounds.filter(
+            status=ReviewRound.Status.OPEN
+        ).exists():
+            return redirect('paper_detail', pk=self.paper.pk)
         return super().dispatch(request, *args, **kwargs)
 
     def get_page_context(self):
@@ -265,12 +265,19 @@ class PaperUpdateView(PaperFormBaseView):
 
 
 class SubmissionCreateView(View):
+    def get_paper(self, request, pk):
+        paper = get_object_or_404(Paper, pk=pk, user=request.user)
+        if paper.review_rounds.filter(status=ReviewRound.Status.OPEN).exists():
+            return None
+        return paper
+
     def get(self, request: HttpRequest, pk: int):
-        paper = get_object_or_404(
-            Paper,
-            pk=pk,
-            user=request.user,
-        )
+        paper = self.get_paper(request, pk)
+        if paper is None:
+            return HttpResponse(
+                'Não é possível enviar uma versão durante uma rodada aberta.',
+                status=409,
+            )
         form = SubmissionForm()
         context = {
             'paper': paper,
@@ -279,11 +286,12 @@ class SubmissionCreateView(View):
         return render(request, 'papers/submission_modal.html', context)
 
     def post(self, request: HttpRequest, pk: int):
-        paper = get_object_or_404(
-            Paper,
-            pk=pk,
-            user=request.user,
-        )
+        paper = self.get_paper(request, pk)
+        if paper is None:
+            return HttpResponse(
+                'Não é possível enviar uma versão durante uma rodada aberta.',
+                status=409,
+            )
         form = SubmissionForm(request.POST, request.FILES)
         if not form.is_valid():
             context = {
@@ -296,6 +304,11 @@ class SubmissionCreateView(View):
         submission: Submission = form.save(commit=False)
         submission.paper = paper
         submission.save()
+        if paper.status == Paper.Status.APPROVED_WITH_CHANGES:
+            paper.status = Paper.Status.CORRECTION_SUBMITTED
+        else:
+            paper.status = Paper.Status.SUBMITTED
+        paper.save(update_fields=('status',))
         response = HttpResponse('')
         response.headers['HX-Redirect'] = reverse(
             'paper_detail',

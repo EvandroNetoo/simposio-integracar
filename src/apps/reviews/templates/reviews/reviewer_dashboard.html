@@ -1,0 +1,61 @@
+{% extends 'platform_base.html' %}
+
+{% block platform_content %}
+
+    <section class="space-y-4">
+        <div class="gov-page-header">
+            <div>
+                <h1 class="text-2xl font-bold">Minhas avaliações</h1>
+                <p class="text-sm text-base-content/70">
+                    Trabalhos atribuídos e prazos de avaliação.
+                </p>
+            </div>
+        </div>
+
+        <div class="grid gap-4">
+
+            {% for assignment in assignments %}
+                <a href="{% url 'review_detail' pk=assignment.pk %}"
+                   class="card bg-base-100 border border-base-300 shadow-sm hover:border-primary/40">
+                    <div class="card-body gap-2">
+                        <div class="flex flex-wrap justify-between gap-2">
+                            <h2 class="card-title text-base">
+
+                                {% if assignment.round.paper.event.blind_review %}
+
+                                    Trabalho #{{ assignment.round.paper.pk }}
+
+                                {% else %}
+
+                                    {{ assignment.round.paper.title }}
+
+                                {% endif %}
+                            </h2>
+
+                            {% if assignment.review %}
+
+                                <span class="badge badge-success">Parecer enviado</span>
+
+                            {% else %}
+
+                                <span class="badge badge-warning">Pendente</span>
+
+                            {% endif %}
+                        </div>
+                        <p class="text-sm text-base-content/70">
+                            {{ assignment.round.paper.event }} ·
+                            Rodada {{ assignment.round.number }}
+                        </p>
+                        <p class="text-xs text-base-content/60">
+                            Prazo: {{ assignment.round.ends_at|date:"d/m/Y H:i" }}
+                        </p>
+                    </div>
+                </a>
+            {% empty %}
+                <div class="alert alert-info">Nenhum trabalho atribuído.</div>
+
+            {% endfor %}
+        </div>
+    </section>
+
+{% endblock platform_content %}

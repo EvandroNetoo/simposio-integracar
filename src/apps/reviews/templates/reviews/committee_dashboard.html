@@ -1,0 +1,155 @@
+{% extends 'platform_base.html' %}
+
+{% block platform_content %}
+
+    <section class="space-y-4">
+        <div class="gov-page-header">
+            <div>
+                <h1 class="text-2xl font-bold">Comissão · {{ event.name }}</h1>
+                <p class="text-sm text-base-content/70">Gestão das avaliações do evento.</p>
+            </div>
+            <div class="flex gap-2">
+
+                {% if can_manage %}
+
+                    <a class="btn btn-secondary"
+                       href="{% url 'review_instrument_create' event_pk=event.pk %}">
+                        Novo instrumento
+                    </a>
+                    <a class="btn btn-primary"
+                       href="{% url 'review_round_create' event_pk=event.pk %}">
+                        Nova rodada
+                    </a>
+
+                {% endif %}
+                <a class="btn btn-ghost" href="{% url 'event_detail' pk=event.pk %}">Voltar</a>
+            </div>
+        </div>
+
+        {% if can_manage %}
+
+            <div class="grid gap-4 lg:grid-cols-2">
+                <div class="card bg-base-100 border border-base-300">
+                    <div class="card-body">
+                        <h2 class="card-title">Membros da comissão</h2>
+                        <ul class="text-sm">
+                            <li>{{ event.owner }} · gestor e decisor (dono)</li>
+
+                            {% for member in members %}
+                                <li>
+                                    {{ member.user }} ·
+
+                                    {% if member.is_manager %}gestor{% endif %}
+
+                                    {% if member.is_manager and member.is_decider %}e{% endif %}
+
+                                    {% if member.is_decider %}decisor{% endif %}
+                                </li>
+
+                            {% endfor %}
+                        </ul>
+                        <form method="post"
+                              action="{% url 'committee_member_create' event_pk=event.pk %}">
+                            {% csrf_token %}
+
+                            {% for field in member_form %}
+                                <c-django-form.field :field="field" />
+
+                            {% endfor %}
+                            <button class="btn btn-primary btn-sm">Adicionar membro</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card bg-base-100 border border-base-300">
+                    <div class="card-body">
+                        <h2 class="card-title">Avaliadores</h2>
+                        <ul class="text-sm">
+
+                            {% for reviewer in reviewers %}
+                                <li>{{ reviewer.user.full_name|default:reviewer.user.email }}</li>
+                            {% empty %}
+                                <li>Nenhum avaliador cadastrado.</li>
+
+                            {% endfor %}
+                        </ul>
+                        <form method="post" action="{% url 'reviewer_create' event_pk=event.pk %}">
+                            {% csrf_token %}
+
+                            {% for field in reviewer_form %}
+                                <c-django-form.field :field="field" />
+
+                            {% endfor %}
+                            <button class="btn btn-primary btn-sm">Adicionar avaliador</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        {% endif %}
+
+        <div class="card bg-base-100 border border-base-300">
+            <div class="card-body">
+                <h2 class="card-title">Instrumentos</h2>
+
+                {% for instrument in instruments %}
+                    <p>
+                        {{ instrument.name }} v{{ instrument.version }} ·
+                        {{ instrument.criteria.count }} critérios
+                    </p>
+                {% empty %}
+                    <p class="text-sm">Nenhum instrumento cadastrado.</p>
+
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card bg-base-100 border border-base-300">
+            <div class="card-body">
+                <h2 class="card-title">Trabalhos e rodadas</h2>
+
+                {% for paper in papers %}
+                    <div class="border-t border-base-300 py-3">
+                        <div class="flex flex-wrap justify-between gap-2">
+                            <div>
+                                <p class="font-semibold">{{ paper.title }}</p>
+                                <p class="text-xs">{{ paper.get_status_display }}</p>
+                            </div>
+                        </div>
+
+                        {% for round in paper.review_rounds.all %}
+                            <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                                <span>Rodada {{ round.number }}</span>
+                                <span class="badge badge-outline">{{ round.get_status_display }}</span>
+                                <span>{{ round.assignments.count }} avaliadores</span>
+
+                                {% if can_manage %}
+
+                                    <a class="link" href="{% url 'review_round_manage' pk=round.pk %}">
+                                        Gerenciar
+                                    </a>
+
+                                {% endif %}
+
+                                {% if can_decide and round.status != 'decided' %}
+
+                                    <a class="link" href="{% url 'final_decision_create' pk=round.pk %}">
+                                        Publicar decisão
+                                    </a>
+
+                                {% endif %}
+                            </div>
+                        {% empty %}
+                            <p class="text-xs text-base-content/60">Sem rodada.</p>
+
+                        {% endfor %}
+                    </div>
+                {% empty %}
+                    <p>Nenhum trabalho cadastrado.</p>
+
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+{% endblock platform_content %}

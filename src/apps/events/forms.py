@@ -21,6 +21,7 @@ class EventForm(forms.ModelForm, NoRequiredAttrFormMixin):
             'contact_email',
             'submission_rules',
             'blind_review',
+            'minimum_reviewers',
         ]
         widgets = {
             'submission_period_start': forms.DateTimeInput(
@@ -59,8 +60,13 @@ class EventForm(forms.ModelForm, NoRequiredAttrFormMixin):
             self.fields[field_name].widget.attrs['placeholder'] = placeholder
 
         self.fields['submission_rules'].widget.attrs['rows'] = 1
+        self.fields['minimum_reviewers'].required = False
+        self.fields['minimum_reviewers'].initial = 2
 
         self.fields['edition'].widget.attrs.update({'inputmode': 'numeric'})
+
+    def clean_minimum_reviewers(self):
+        return self.cleaned_data.get('minimum_reviewers') or 2
 
 
 class EixoTematicoForm(NoRequiredAttrFormMixin, forms.ModelForm):

@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views import View
 from papers.models import Paper
+from reviews.models import user_can_decide_event, user_can_manage_event
 
 from events.forms import EixoTematicoFormSet, EventForm
 from events.models import Event
@@ -58,6 +59,7 @@ class EventUpdateView(EventCreateView):
         self.event = get_object_or_404(
             Event.objects.prefetch_related('eixos_tematicos'),
             pk=kwargs['pk'],
+            owner=request.user,
         )
         return super().dispatch(request, *args, **kwargs)
 
@@ -120,5 +122,10 @@ class EventDetailView(View):
             'eixos_tematicos': eixos_tematicos,
             'papers': papers,
             'papers_total': papers.count(),
+            'can_edit_event': event.owner_id == request.user.id,
+            'can_access_committee': (
+                user_can_manage_event(request.user, event)
+                or user_can_decide_event(request.user, event)
+            ),
         }
         return render(request, self.template_name, context)

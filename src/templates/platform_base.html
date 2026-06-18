@@ -107,9 +107,24 @@
 
                             {# djlint:on #}
                         </li>
+
+                        {% if request.user.events_as_reviewer.exists %}
+
+                            <li>
+                                {# djlint:off #}
+                                <a href="{% url 'reviewer_dashboard' %}"
+                                   class="{% if current_url == 'reviewer_dashboard' or current_url == 'review_detail' %}bg-primary text-primary-content font-bold{% endif %}">
+                                    <i class="ph ph-check-square-offset text-lg" aria-hidden="true"></i>
+                                    Avaliações
+                                </a>
+                                {# djlint:on #}
+                            </li>
+
+                        {% endif %}
                     </ul>
 
                 {% endwith %}
+
 
                 <div class="px-2 py-4 text-xs text-base-content/50">
                     <div class="dropdown dropdown-top dropdown-center flex">

@@ -28,9 +28,16 @@ class Event(models.Model):
         'regras gerais de submissao', blank=True
     )
     blind_review = models.BooleanField(
-        'revisao cega',
+        'revisão duplo-cega',
         default=False,
-        help_text='Se ativado, os avaliadores não terão acesso às informações dos autores durante a avaliação.',
+        help_text=(
+            'Se ativado, avaliadores não verão os autores e autores não '
+            'verão a identidade dos avaliadores.'
+        ),
+    )
+    minimum_reviewers = models.PositiveSmallIntegerField(
+        'quantidade mínima de avaliadores',
+        default=2,
     )
 
     user_reviewers = models.ManyToManyField(

@@ -1,1 +1,66 @@
-urlpatterns = []
+from django.urls import path
+
+from reviews import views
+
+urlpatterns = [
+    path(
+        'avaliacoes/',
+        views.ReviewerDashboardView.as_view(),
+        name='reviewer_dashboard',
+    ),
+    path(
+        'avaliacoes/<int:pk>/',
+        views.ReviewDetailView.as_view(),
+        name='review_detail',
+    ),
+    path(
+        'eventos/<int:event_pk>/comissao/',
+        views.CommitteeDashboardView.as_view(),
+        name='committee_dashboard',
+    ),
+    path(
+        'eventos/<int:event_pk>/comissao/membros/',
+        views.CommitteeMemberCreateView.as_view(),
+        name='committee_member_create',
+    ),
+    path(
+        'eventos/<int:event_pk>/comissao/avaliadores/',
+        views.ReviewerCreateView.as_view(),
+        name='reviewer_create',
+    ),
+    path(
+        'eventos/<int:event_pk>/comissao/instrumentos/novo/',
+        views.ReviewInstrumentCreateView.as_view(),
+        name='review_instrument_create',
+    ),
+    path(
+        'eventos/<int:event_pk>/comissao/rodadas/nova/',
+        views.ReviewRoundCreateView.as_view(),
+        name='review_round_create',
+    ),
+    path(
+        'rodadas/<int:pk>/',
+        views.ReviewRoundManageView.as_view(),
+        name='review_round_manage',
+    ),
+    path(
+        'rodadas/<int:pk>/abrir/',
+        views.ReviewRoundOpenView.as_view(),
+        name='review_round_open',
+    ),
+    path(
+        'rodadas/<int:pk>/encerrar/',
+        views.ReviewRoundCloseView.as_view(),
+        name='review_round_close',
+    ),
+    path(
+        'rodadas/<int:pk>/decisao/',
+        views.FinalDecisionCreateView.as_view(),
+        name='final_decision_create',
+    ),
+    path(
+        'submissoes/<int:pk>/arquivo/',
+        views.SubmissionDownloadView.as_view(),
+        name='submission_download',
+    ),
+]

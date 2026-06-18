@@ -12,11 +12,26 @@
             </div>
 
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <a href="{% url 'event_update' pk=event.pk %}"
-                   class="btn btn-secondary gap-2">
-                    <i class="ph ph-pencil-simple text-lg"></i>
-                    Editar evento
-                </a>
+
+                {% if can_edit_event %}
+
+                    <a href="{% url 'event_update' pk=event.pk %}"
+                       class="btn btn-secondary gap-2">
+                        <i class="ph ph-pencil-simple text-lg"></i>
+                        Editar evento
+                    </a>
+
+                {% endif %}
+
+                {% if can_access_committee %}
+
+                    <a href="{% url 'committee_dashboard' event_pk=event.pk %}"
+                       class="btn btn-secondary gap-2">
+                        <i class="ph ph-users-three text-lg"></i>
+                        Comissão
+                    </a>
+
+                {% endif %}
                 <a href="{% url 'paper_create' event_pk=event.pk %}"
                    class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl transition">
                     <i class="ph ph-paper-plane-tilt text-lg"></i>
