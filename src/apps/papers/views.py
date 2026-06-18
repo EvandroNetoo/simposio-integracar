@@ -7,7 +7,6 @@ from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views import View
 from events.models import Event
-from reviews.models import ReviewRound
 
 from papers.forms import CoauthorFormSet, PaperForm, SubmissionForm
 from papers.models import Paper, Submission
@@ -51,8 +50,7 @@ class PaperListView(View):
 
     def get(self, request: HttpRequest):
         papers = (
-            Paper.objects
-            .filter(user=request.user)
+            Paper.objects.filter(user=request.user)
             .select_related('event', 'eixo_tematico')
             .prefetch_related('coauthors')
             .order_by('-created_at')
@@ -162,29 +160,19 @@ class PaperDetailView(View):
                 'event',
                 'eixo_tematico',
                 'user',
-            ).prefetch_related('coauthors__user'),
+            ).prefetch_related(
+                'coauthors__user',
+                'review_assignments__reviewer__user',
+                'review_assignments__review',
+            ),
             pk=pk,
             user=request.user,
         )
         coauthors = paper.coauthors.select_related('user').all()
         submissions = list(paper.submission_set.all().order_by('created_at'))
-        rounds_by_submission = {
-            round_.submission_id: round_
-            for round_ in (
-                ReviewRound.objects
-                .filter(paper=paper)
-                .select_related('decision')
-                .prefetch_related(
-                    'assignments__review__criterion_scores__criterion',
-                    'assignments__reviewer__user',
-                )
-                .order_by('number')
-            )
-        }
         submission_items = [
             {
                 'submission': submission,
-                'round': rounds_by_submission.get(submission.pk),
             }
             for submission in submissions
         ]
@@ -193,9 +181,8 @@ class PaperDetailView(View):
             'event': paper.event,
             'coauthors': coauthors,
             'submission_items': submission_items,
-            'has_open_round': paper.review_rounds.filter(
-                status=ReviewRound.Status.OPEN,
-            ).exists(),
+            'assignments': paper.review_assignments.all(),
+            'has_active_review': paper.status == Paper.Status.UNDER_REVIEW,
         }
         return render(request, self.template_name, context)
 
@@ -208,17 +195,15 @@ class PaperUpdateView(PaperFormBaseView):
             user=request.user,
         )
         self.event = self.paper.event
-        if self.paper.review_rounds.filter(
-            status=ReviewRound.Status.OPEN
-        ).exists():
+        if self.paper.status == Paper.Status.UNDER_REVIEW:
             return redirect('paper_detail', pk=self.paper.pk)
         return super().dispatch(request, *args, **kwargs)
 
     def get_page_context(self):
         return {
             'page_title': 'Editar trabalho',
-            'page_subtitle': 'Atualize as informações do trabalho.',
-            'submit_label': 'Salvar alterações',
+            'page_subtitle': 'Atualize as informacoes do trabalho.',
+            'submit_label': 'Salvar alteracoes',
             'back_url': reverse(
                 'paper_detail',
                 kwargs={'pk': self.paper.pk},
@@ -267,7 +252,7 @@ class PaperUpdateView(PaperFormBaseView):
 class SubmissionCreateView(View):
     def get_paper(self, request, pk):
         paper = get_object_or_404(Paper, pk=pk, user=request.user)
-        if paper.review_rounds.filter(status=ReviewRound.Status.OPEN).exists():
+        if paper.status == Paper.Status.UNDER_REVIEW:
             return None
         return paper
 
@@ -275,7 +260,7 @@ class SubmissionCreateView(View):
         paper = self.get_paper(request, pk)
         if paper is None:
             return HttpResponse(
-                'Não é possível enviar uma versão durante uma rodada aberta.',
+                'Nao e possivel enviar uma versao durante a avaliacao.',
                 status=409,
             )
         form = SubmissionForm()
@@ -289,7 +274,7 @@ class SubmissionCreateView(View):
         paper = self.get_paper(request, pk)
         if paper is None:
             return HttpResponse(
-                'Não é possível enviar uma versão durante uma rodada aberta.',
+                'Nao e possivel enviar uma versao durante a avaliacao.',
                 status=409,
             )
         form = SubmissionForm(request.POST, request.FILES)

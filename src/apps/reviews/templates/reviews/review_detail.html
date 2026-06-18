@@ -18,7 +18,7 @@
                     {% endif %}
                 </h1>
                 <p class="text-sm text-base-content/70">
-                    {{ paper.event }} · prazo {{ assignment.round.ends_at|date:"d/m/Y H:i" }}
+                    {{ paper.event }} · prazo {{ paper.event.evaluation_period_end|date:"d/m/Y H:i" }}
                 </p>
             </div>
             <a href="{% url 'reviewer_dashboard' %}" class="btn btn-ghost">Voltar</a>
@@ -41,47 +41,26 @@
                     </p>
 
                 {% endif %}
-                <a href="{% url 'submission_download' pk=assignment.round.submission.pk %}"
+                <a href="{% url 'submission_download' pk=submission.pk %}"
                    target="_blank"
                    class="btn btn-secondary btn-sm self-start">
-                    Abrir PDF versão {{ assignment.round.submission.version }}
+                    Abrir PDF versao {{ submission.version }}
                 </a>
             </div>
         </div>
 
         <div class="card bg-base-100 border border-base-300 shadow-sm">
             <div class="card-body">
-
-                {% if assignment.round.is_editable %}
-
-                    <div class="alert alert-warning mb-4">
-                        Todo salvamento será publicado imediatamente para o autor.
-                    </div>
-                    <form method="post" class="space-y-4">
-                        {% csrf_token %}
-                        <c-django-form />
-                        <button class="btn btn-primary" type="submit">
-                            Salvar e publicar parecer
-                        </button>
-                    </form>
-
-                {% else %}
-
-                    <div class="alert alert-info">Esta rodada não está aberta para edição.</div>
-
-                    {% if review %}
-
-                        <p class="mt-4">
-                            <strong>Nota:</strong> {{ review.weighted_score }}
-                        </p>
-                        <p>
-                            <strong>Recomendação:</strong> {{ review.get_recommendation_display }}
-                        </p>
-                        <p class="whitespace-pre-line">{{ review.comments_to_author }}</p>
-
-                    {% endif %}
-
-                {% endif %}
+                <div class="alert alert-warning mb-4">
+                    Todo salvamento sera publicado imediatamente para o autor.
+                </div>
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    <c-django-form />
+                    <button class="btn btn-primary" type="submit">
+                        Salvar e publicar parecer
+                    </button>
+                </form>
             </div>
         </div>
     </section>

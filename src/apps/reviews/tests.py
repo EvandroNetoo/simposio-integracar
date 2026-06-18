@@ -1,5 +1,4 @@
 from datetime import timedelta
-from decimal import Decimal
 
 from accounts.models import User
 from django.core.exceptions import ValidationError
@@ -10,16 +9,13 @@ from django.utils import timezone
 from events.models import EixoTematico, Event
 from papers.models import Coauthor, Paper, Submission
 
-from reviews.forms import ReviewForm
+from reviews.forms import AssignmentForm, ReviewForm
 from reviews.models import (
     CommitteeMember,
     FinalDecision,
     Review,
     ReviewAssignment,
-    ReviewCriterion,
     Reviewer,
-    ReviewInstrument,
-    ReviewRound,
     user_can_decide_event,
     user_can_manage_event,
 )
@@ -45,10 +41,10 @@ class ReviewFlowTestCase(TestCase):
         self.outsider = self.create_user('outsider@example.com')
         self.event = Event.objects.create(
             owner=self.owner,
-            name='Simpósio',
+            name='Simposio',
             edition='1',
             year=2026,
-            organizing_institution='Instituição',
+            organizing_institution='Instituicao',
             submission_period_start=self.now - timedelta(days=3),
             submission_period_end=self.now + timedelta(days=3),
             evaluation_period_start=self.now - timedelta(days=1),
@@ -78,33 +74,6 @@ class ReviewFlowTestCase(TestCase):
                 content_type='application/pdf',
             ),
         )
-        self.instrument = ReviewInstrument.objects.create(
-            event=self.event,
-            version=1,
-            name='Instrumento',
-            created_by=self.owner,
-        )
-        self.criterion_1 = ReviewCriterion.objects.create(
-            instrument=self.instrument,
-            name='Mérito',
-            weight=Decimal('60'),
-            order=1,
-        )
-        self.criterion_2 = ReviewCriterion.objects.create(
-            instrument=self.instrument,
-            name='Clareza',
-            weight=Decimal('40'),
-            order=2,
-        )
-        self.round = ReviewRound.objects.create(
-            paper=self.paper,
-            submission=self.submission,
-            instrument=self.instrument,
-            number=1,
-            starts_at=self.now - timedelta(hours=1),
-            ends_at=self.now + timedelta(hours=1),
-            created_by=self.owner,
-        )
         self.reviewer = Reviewer.objects.create(
             event=self.event,
             user=self.reviewer_user,
@@ -124,21 +93,19 @@ class ReviewFlowTestCase(TestCase):
     def create_assignment(self, reviewer=None):
         assignment = ReviewAssignment(
             reviewer=reviewer or self.reviewer,
-            round=self.round,
+            paper=self.paper,
         )
         assignment.full_clean()
         assignment.save()
         return assignment
 
-    def submit_review(self, assignment, score_1='8', score_2='6'):
+    def submit_review(self, assignment):
         review = Review.objects.filter(assignment=assignment).first()
         form = ReviewForm(
             {
-                f'criterion_{self.criterion_1.pk}': score_1,
-                f'criterion_{self.criterion_2.pk}': score_2,
-                'comments_to_author': 'Comentário público',
-                'internal_comments': 'Comentário reservado',
-                'recommendation': Review.ReviewRecommendation.ACCEPT,
+                'comments_to_author': 'Comentario publico',
+                'internal_comments': 'Comentario reservado',
+                'recommendation': Review.ReviewRecommendation.APPROVE,
             },
             assignment=assignment,
             instance=review,
@@ -167,43 +134,22 @@ class ReviewFlowTestCase(TestCase):
         self.assertTrue(user_can_decide_event(decider, self.event))
         self.assertFalse(user_can_manage_event(decider, self.event))
 
-    def test_instrument_used_by_round_is_immutable(self):
-        self.instrument.name = 'Alterado'
+    def test_committee_assigns_reviewers_directly_to_paper(self):
+        form = AssignmentForm(
+            {'reviewers': [self.reviewer.pk, self.second_reviewer.pk]},
+            paper=self.paper,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
 
-        with self.assertRaises(ValidationError):
-            self.instrument.full_clean()
-
-        self.criterion_1.weight = Decimal('50')
-        with self.assertRaises(ValidationError):
-            self.criterion_1.full_clean()
-
-    def test_round_requires_weights_totaling_100_and_minimum_reviewers(self):
-        self.criterion_2.weight = Decimal('30')
-        self.criterion_2.save(update_fields=('weight',))
-        self.create_assignment()
-        self.create_assignment(self.second_reviewer)
-
-        with self.assertRaises(ValidationError):
-            self.round.open()
-
-        self.criterion_2.weight = Decimal('40')
-        self.criterion_2.save(update_fields=('weight',))
-        self.round.assignments.filter(reviewer=self.second_reviewer).delete()
-        with self.assertRaises(ValidationError):
-            self.round.open()
-
-    def test_open_round_updates_paper_and_blocks_new_submission(self):
-        self.create_assignment()
-        self.create_assignment(self.second_reviewer)
-        self.round.open()
         self.paper.refresh_from_db()
+        self.assertEqual(self.paper.review_assignments.count(), 2)
         self.assertEqual(self.paper.status, Paper.Status.UNDER_REVIEW)
 
-        self.client.force_login(self.author)
-        response = self.client.get(
-            reverse('submission_create', args=[self.paper.pk])
-        )
-        self.assertEqual(response.status_code, 409)
+        form = AssignmentForm({'reviewers': [self.reviewer.pk]}, paper=self.paper)
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        self.assertEqual(self.paper.review_assignments.count(), 1)
 
     def test_author_and_coauthor_cannot_be_assigned(self):
         author_reviewer = Reviewer.objects.create(
@@ -213,7 +159,7 @@ class ReviewFlowTestCase(TestCase):
         with self.assertRaises(ValidationError):
             ReviewAssignment(
                 reviewer=author_reviewer,
-                round=self.round,
+                paper=self.paper,
             ).full_clean()
 
         coauthor_user = self.create_user('coauthor@example.com')
@@ -229,58 +175,57 @@ class ReviewFlowTestCase(TestCase):
         with self.assertRaises(ValidationError):
             ReviewAssignment(
                 reviewer=coauthor_reviewer,
-                round=self.round,
+                paper=self.paper,
             ).full_clean()
 
-    def test_review_requires_all_scores_and_calculates_weighted_average(self):
+    def test_reviewer_submits_simple_review_without_grades(self):
         assignment = self.create_assignment()
-        self.round.status = ReviewRound.Status.OPEN
-        self.round.save(update_fields=('status',))
 
-        incomplete = ReviewForm(
-            {
-                f'criterion_{self.criterion_1.pk}': '8',
-                'comments_to_author': 'Comentário',
-                'recommendation': Review.ReviewRecommendation.ACCEPT,
-            },
-            assignment=assignment,
+        review = self.submit_review(assignment)
+        self.assertEqual(
+            review.recommendation,
+            Review.ReviewRecommendation.APPROVE,
         )
-        self.assertFalse(incomplete.is_valid())
+        self.assertEqual(review.comments_to_author, 'Comentario publico')
 
-        review = self.submit_review(assignment)
-        self.assertEqual(review.weighted_score, Decimal('7.20'))
-        self.assertEqual(review.criterion_scores.count(), 2)
+        assignment.refresh_from_db()
+        self.assertIsNotNone(assignment.completed_at)
 
-    def test_reviewer_can_edit_published_review_only_inside_deadline(self):
+    def test_reviewer_can_edit_published_review_inside_event_deadline(self):
         assignment = self.create_assignment()
-        self.round.status = ReviewRound.Status.OPEN
-        self.round.save(update_fields=('status',))
         review = self.submit_review(assignment)
 
-        updated = self.submit_review(assignment, score_1='10', score_2='10')
-        self.assertEqual(updated.pk, review.pk)
-        self.assertEqual(updated.weighted_score, Decimal('10.00'))
-
-        self.round.ends_at = self.now - timedelta(minutes=1)
-        self.round.save(update_fields=('ends_at',))
         form = ReviewForm(
             {
-                f'criterion_{self.criterion_1.pk}': '9',
-                f'criterion_{self.criterion_2.pk}': '9',
+                'comments_to_author': 'Atualizado',
+                'internal_comments': 'Comentario reservado',
+                'recommendation': Review.ReviewRecommendation.REJECT,
+            },
+            assignment=assignment,
+            instance=review,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        updated = form.save()
+        self.assertEqual(updated.pk, review.pk)
+        self.assertEqual(
+            updated.recommendation,
+            Review.ReviewRecommendation.REJECT,
+        )
+
+        self.event.evaluation_period_end = self.now - timedelta(minutes=1)
+        self.event.save(update_fields=('evaluation_period_end',))
+        form = ReviewForm(
+            {
                 'comments_to_author': 'Tarde',
-                'recommendation': Review.ReviewRecommendation.ACCEPT,
+                'recommendation': Review.ReviewRecommendation.APPROVE,
             },
             assignment=assignment,
             instance=updated,
         )
         self.assertFalse(form.is_valid())
 
-    def test_double_blind_author_page_hides_reviewer_and_internal_comment(
-        self,
-    ):
+    def test_double_blind_author_page_hides_reviewer_and_internal_comment(self):
         assignment = self.create_assignment()
-        self.round.status = ReviewRound.Status.OPEN
-        self.round.save(update_fields=('status',))
         self.submit_review(assignment)
 
         self.client.force_login(self.author)
@@ -288,10 +233,10 @@ class ReviewFlowTestCase(TestCase):
             reverse('paper_detail', args=[self.paper.pk])
         )
 
-        self.assertContains(response, 'Avaliador anônimo')
+        self.assertContains(response, 'Avaliador anonimo')
         self.assertNotContains(response, self.reviewer_user.email)
-        self.assertNotContains(response, 'Comentário reservado')
-        self.assertContains(response, 'Comentário público')
+        self.assertNotContains(response, 'Comentario reservado')
+        self.assertContains(response, 'Comentario publico')
 
     def test_protected_download_rejects_outsider_and_allows_assignment(self):
         url = reverse('submission_download', args=[self.submission.pk])
@@ -307,21 +252,17 @@ class ReviewFlowTestCase(TestCase):
     def test_decision_updates_status_and_allows_correction_version(self):
         first = self.create_assignment()
         second = self.create_assignment(self.second_reviewer)
-        self.round.status = ReviewRound.Status.OPEN
-        self.round.save(update_fields=('status',))
         self.submit_review(first)
-        self.submit_review(second, score_1='7', score_2='7')
+        self.submit_review(second)
 
         decision = FinalDecision.objects.create(
-            round=self.round,
+            paper=self.paper,
             result=FinalDecision.Result.APPROVED_WITH_CHANGES,
             justification='Enviar ajustes.',
             decided_by=self.owner,
         )
         self.paper.refresh_from_db()
-        self.round.refresh_from_db()
         self.assertEqual(self.paper.status, Paper.Status.APPROVED_WITH_CHANGES)
-        self.assertEqual(self.round.status, ReviewRound.Status.DECIDED)
 
         correction = Submission.objects.create(
             paper=self.paper,
@@ -332,7 +273,7 @@ class ReviewFlowTestCase(TestCase):
             ),
         )
         self.assertEqual(correction.version, 2)
-        self.assertEqual(decision.round, self.round)
+        self.assertEqual(decision.paper, self.paper)
 
     def test_committee_and_review_views_enforce_roles(self):
         self.client.force_login(self.outsider)
@@ -343,8 +284,6 @@ class ReviewFlowTestCase(TestCase):
         detail = reverse('review_detail', args=[assignment.pk])
         self.assertEqual(self.client.get(detail).status_code, 404)
 
-        self.round.status = ReviewRound.Status.OPEN
-        self.round.save(update_fields=('status',))
         self.client.force_login(self.reviewer_user)
         self.assertEqual(self.client.get(detail).status_code, 200)
 
@@ -354,14 +293,10 @@ class ReviewFlowTestCase(TestCase):
         dashboard = self.client.get(
             reverse('committee_dashboard', args=[self.event.pk])
         )
-        instrument = self.client.get(
-            reverse('review_instrument_create', args=[self.event.pk])
-        )
-        round_form = self.client.get(
-            reverse('review_round_create', args=[self.event.pk])
+        assignment_manage = self.client.get(
+            reverse('paper_assignment_manage', args=[self.paper.pk])
         )
 
         self.assertEqual(dashboard.status_code, 200)
-        self.assertContains(dashboard, 'Comissão')
-        self.assertEqual(instrument.status_code, 200)
-        self.assertEqual(round_form.status_code, 200)
+        self.assertContains(dashboard, 'Comissao')
+        self.assertEqual(assignment_manage.status_code, 200)

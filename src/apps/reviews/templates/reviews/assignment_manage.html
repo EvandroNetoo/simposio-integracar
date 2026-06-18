@@ -1,0 +1,31 @@
+{% extends 'platform_base.html' %}
+
+{% block platform_content %}
+
+    <section class="space-y-4">
+        <div class="gov-page-header">
+            <div>
+                <h1 class="text-2xl font-bold">Avaliadores do trabalho</h1>
+                <p class="text-sm text-base-content/70">
+                    {{ paper.title }} · {{ paper.event }}
+                </p>
+            </div>
+            <a href="{% url 'committee_dashboard' event_pk=paper.event_id %}"
+               class="btn btn-ghost">Voltar</a>
+        </div>
+
+        <div class="card bg-base-100 border border-base-300 shadow-sm">
+            <div class="card-body">
+                <p class="text-sm">
+                    Eixo do trabalho: <strong>{{ paper.eixo_tematico.name }}</strong>.
+                </p>
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    <c-django-form />
+                    <button class="btn btn-primary">Salvar distribuicao</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+{% endblock platform_content %}

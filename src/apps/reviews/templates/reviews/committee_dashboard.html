@@ -5,25 +5,10 @@
     <section class="space-y-4">
         <div class="gov-page-header">
             <div>
-                <h1 class="text-2xl font-bold">Comissão · {{ event.name }}</h1>
-                <p class="text-sm text-base-content/70">Gestão das avaliações do evento.</p>
+                <h1 class="text-2xl font-bold">Comissao · {{ event.name }}</h1>
+                <p class="text-sm text-base-content/70">Gestao das avaliacoes do evento.</p>
             </div>
-            <div class="flex gap-2">
-
-                {% if can_manage %}
-
-                    <a class="btn btn-secondary"
-                       href="{% url 'review_instrument_create' event_pk=event.pk %}">
-                        Novo instrumento
-                    </a>
-                    <a class="btn btn-primary"
-                       href="{% url 'review_round_create' event_pk=event.pk %}">
-                        Nova rodada
-                    </a>
-
-                {% endif %}
-                <a class="btn btn-ghost" href="{% url 'event_detail' pk=event.pk %}">Voltar</a>
-            </div>
+            <a class="btn btn-ghost" href="{% url 'event_detail' pk=event.pk %}">Voltar</a>
         </div>
 
         {% if can_manage %}
@@ -31,7 +16,7 @@
             <div class="grid gap-4 lg:grid-cols-2">
                 <div class="card bg-base-100 border border-base-300">
                     <div class="card-body">
-                        <h2 class="card-title">Membros da comissão</h2>
+                        <h2 class="card-title">Membros da comissao</h2>
                         <ul class="text-sm">
                             <li>{{ event.owner }} · gestor e decisor (dono)</li>
 
@@ -90,23 +75,7 @@
 
         <div class="card bg-base-100 border border-base-300">
             <div class="card-body">
-                <h2 class="card-title">Instrumentos</h2>
-
-                {% for instrument in instruments %}
-                    <p>
-                        {{ instrument.name }} v{{ instrument.version }} ·
-                        {{ instrument.criteria.count }} critérios
-                    </p>
-                {% empty %}
-                    <p class="text-sm">Nenhum instrumento cadastrado.</p>
-
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="card bg-base-100 border border-base-300">
-            <div class="card-body">
-                <h2 class="card-title">Trabalhos e rodadas</h2>
+                <h2 class="card-title">Trabalhos e avaliadores</h2>
 
                 {% for paper in papers %}
                     <div class="border-t border-base-300 py-3">
@@ -115,34 +84,38 @@
                                 <p class="font-semibold">{{ paper.title }}</p>
                                 <p class="text-xs">{{ paper.get_status_display }}</p>
                             </div>
-                        </div>
-
-                        {% for round in paper.review_rounds.all %}
-                            <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-                                <span>Rodada {{ round.number }}</span>
-                                <span class="badge badge-outline">{{ round.get_status_display }}</span>
-                                <span>{{ round.assignments.count }} avaliadores</span>
+                            <div class="flex flex-wrap gap-2">
 
                                 {% if can_manage %}
 
-                                    <a class="link" href="{% url 'review_round_manage' pk=round.pk %}">
-                                        Gerenciar
+                                    <a class="link"
+                                       href="{% url 'paper_assignment_manage' paper_pk=paper.pk %}">
+                                        Gerenciar avaliadores
                                     </a>
 
                                 {% endif %}
 
-                                {% if can_decide and round.status != 'decided' %}
+                                {% if can_decide and not paper.final_decision %}
 
-                                    <a class="link" href="{% url 'final_decision_create' pk=round.pk %}">
-                                        Publicar decisão
+                                    <a class="link"
+                                       href="{% url 'final_decision_create' paper_pk=paper.pk %}">
+                                        Publicar decisao
                                     </a>
 
                                 {% endif %}
                             </div>
-                        {% empty %}
-                            <p class="text-xs text-base-content/60">Sem rodada.</p>
+                        </div>
+                        <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                            <span>{{ paper.review_assignments.count }} avaliadores</span>
 
-                        {% endfor %}
+                            {% if paper.final_decision %}
+
+                                <span class="badge badge-outline">
+                                    {{ paper.final_decision.get_result_display }}
+                                </span>
+
+                            {% endif %}
+                        </div>
                     </div>
                 {% empty %}
                     <p>Nenhum trabalho cadastrado.</p>

@@ -5,9 +5,9 @@
     <section class="space-y-4">
         <div class="gov-page-header">
             <div>
-                <h1 class="text-2xl font-bold">Minhas avaliações</h1>
+                <h1 class="text-2xl font-bold">Minhas avaliacoes</h1>
                 <p class="text-sm text-base-content/70">
-                    Trabalhos atribuídos e prazos de avaliação.
+                    Trabalhos atribuidos e prazos de avaliacao.
                 </p>
             </div>
         </div>
@@ -21,13 +21,13 @@
                         <div class="flex flex-wrap justify-between gap-2">
                             <h2 class="card-title text-base">
 
-                                {% if assignment.round.paper.event.blind_review %}
+                                {% if assignment.paper.event.blind_review %}
 
-                                    Trabalho #{{ assignment.round.paper.pk }}
+                                    Trabalho #{{ assignment.paper.pk }}
 
                                 {% else %}
 
-                                    {{ assignment.round.paper.title }}
+                                    {{ assignment.paper.title }}
 
                                 {% endif %}
                             </h2>
@@ -43,16 +43,15 @@
                             {% endif %}
                         </div>
                         <p class="text-sm text-base-content/70">
-                            {{ assignment.round.paper.event }} ·
-                            Rodada {{ assignment.round.number }}
+                            {{ assignment.paper.event }}
                         </p>
                         <p class="text-xs text-base-content/60">
-                            Prazo: {{ assignment.round.ends_at|date:"d/m/Y H:i" }}
+                            Prazo: {{ assignment.paper.event.evaluation_period_end|date:"d/m/Y H:i" }}
                         </p>
                     </div>
                 </a>
             {% empty %}
-                <div class="alert alert-info">Nenhum trabalho atribuído.</div>
+                <div class="alert alert-info">Nenhum trabalho atribuido.</div>
 
             {% endfor %}
         </div>

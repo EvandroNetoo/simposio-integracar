@@ -4,7 +4,7 @@
 
 Desenvolver um sistema web para gerenciamento de inscrições e submissões de trabalhos em simpósios acadêmicos, permitindo que pesquisadores realizem cadastro, submetam trabalhos, acompanhem avaliações e recebam pareceres emitidos pela comissão avaliadora.
 
----
+---  
 
 # 2. Perfis de Usuário
 

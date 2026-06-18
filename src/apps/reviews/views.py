@@ -1,28 +1,20 @@
-from decimal import Decimal
-
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import transaction
+from django.core.exceptions import PermissionDenied
 from django.http import FileResponse, Http404, HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from events.models import Event
-from papers.models import Submission
+from papers.models import Paper, Submission
 
 from reviews.forms import (
     AssignmentForm,
     CommitteeMemberForm,
     FinalDecisionForm,
-    ReviewCriterionFormSet,
     ReviewerForm,
     ReviewForm,
-    ReviewInstrumentForm,
-    ReviewRoundForm,
 )
 from reviews.models import (
     ReviewAssignment,
-    ReviewInstrument,
-    ReviewRound,
     user_can_decide_event,
     user_can_manage_event,
 )
@@ -47,16 +39,13 @@ class ReviewerDashboardView(View):
 
     def get(self, request: HttpRequest):
         assignments = (
-            ReviewAssignment.objects
-            .filter(reviewer__user=request.user)
-            .exclude(round__status=ReviewRound.Status.DRAFT)
+            ReviewAssignment.objects.filter(reviewer__user=request.user)
             .select_related(
-                'round__paper__event',
-                'round__paper__eixo_tematico',
-                'round__submission',
+                'paper__event',
+                'paper__eixo_tematico',
             )
-            .prefetch_related('round__instrument__criteria')
-            .order_by('round__ends_at')
+            .prefetch_related('paper__submission_set')
+            .order_by('paper__event__evaluation_period_end', 'paper__title')
         )
         return render(
             request,
@@ -69,20 +58,15 @@ class ReviewDetailView(View):
     template_name = 'reviews/review_detail.html'
 
     def get_assignment(self, request, pk):
-        assignment = get_object_or_404(
+        return get_object_or_404(
             ReviewAssignment.objects.select_related(
                 'reviewer__user',
-                'round__paper__event',
-                'round__paper__eixo_tematico',
-                'round__submission',
-                'round__instrument',
-            ).prefetch_related('round__instrument__criteria'),
+                'paper__event',
+                'paper__eixo_tematico',
+            ),
             pk=pk,
             reviewer__user=request.user,
         )
-        if assignment.round.status == ReviewRound.Status.DRAFT:
-            raise Http404
-        return assignment
 
     def get(self, request: HttpRequest, pk: int):
         assignment = self.get_assignment(request, pk)
@@ -96,7 +80,10 @@ class ReviewDetailView(View):
             self.template_name,
             {
                 'assignment': assignment,
-                'paper': assignment.round.paper,
+                'paper': assignment.paper,
+                'submission': assignment.paper.submission_set.latest(
+                    'version'
+                ),
                 'form': form,
                 'review': review,
             },
@@ -122,7 +109,10 @@ class ReviewDetailView(View):
             self.template_name,
             {
                 'assignment': assignment,
-                'paper': assignment.round.paper,
+                'paper': assignment.paper,
+                'submission': assignment.paper.submission_set.latest(
+                    'version'
+                ),
                 'form': form,
                 'review': review,
             },
@@ -139,10 +129,10 @@ class CommitteeDashboardView(View):
         if not can_manage and not can_decide:
             raise PermissionDenied
 
-        rounds = (
-            event.papers
-            .prefetch_related(
-                'review_rounds__assignments__review',
+        papers = (
+            event.papers.prefetch_related(
+                'review_assignments__review',
+                'review_assignments__reviewer__user',
             )
             .select_related('user', 'eixo_tematico')
             .order_by('title')
@@ -152,10 +142,7 @@ class CommitteeDashboardView(View):
             self.template_name,
             {
                 'event': event,
-                'papers': rounds,
-                'instruments': event.review_instruments.prefetch_related(
-                    'criteria'
-                ),
+                'papers': papers,
                 'reviewers': event.reviewers.select_related(
                     'user'
                 ).prefetch_related('eixos_tematicos'),
@@ -177,9 +164,9 @@ class CommitteeMemberCreateView(View):
             member.event = event
             member.full_clean()
             member.save()
-            messages.success(request, 'Membro da comissão adicionado.')
+            messages.success(request, 'Membro da comissao adicionado.')
         else:
-            messages.error(request, 'Não foi possível adicionar o membro.')
+            messages.error(request, 'Nao foi possivel adicionar o membro.')
         return redirect('committee_dashboard', event_pk=event.pk)
 
 
@@ -195,220 +182,92 @@ class ReviewerCreateView(View):
             form.save_m2m()
             messages.success(request, 'Avaliador adicionado.')
         else:
-            messages.error(request, 'Não foi possível adicionar o avaliador.')
+            messages.error(request, 'Nao foi possivel adicionar o avaliador.')
         return redirect('committee_dashboard', event_pk=event.pk)
 
 
-class ReviewInstrumentCreateView(View):
-    template_name = 'reviews/instrument_form.html'
+class PaperAssignmentManageView(View):
+    template_name = 'reviews/assignment_manage.html'
 
-    def get_event(self, request, event_pk):
-        return get_managed_event(request, event_pk)
+    def get_paper(self, request, paper_pk):
+        paper = get_object_or_404(
+            Paper.objects.select_related('event', 'eixo_tematico'),
+            pk=paper_pk,
+        )
+        if not user_can_manage_event(request.user, paper.event):
+            raise PermissionDenied
+        return paper
 
-    def get(self, request: HttpRequest, event_pk: int):
-        event = self.get_event(request, event_pk)
-        instrument = ReviewInstrument(event=event, created_by=request.user)
+    def get(self, request: HttpRequest, paper_pk: int):
+        paper = self.get_paper(request, paper_pk)
         return render(
             request,
             self.template_name,
             {
-                'event': event,
-                'form': ReviewInstrumentForm(instance=instrument),
-                'formset': ReviewCriterionFormSet(instance=instrument),
+                'paper': paper,
+                'form': AssignmentForm(paper=paper),
             },
         )
 
-    def post(self, request: HttpRequest, event_pk: int):
-        event = self.get_event(request, event_pk)
-        instrument = ReviewInstrument(event=event, created_by=request.user)
-        form = ReviewInstrumentForm(request.POST, instance=instrument)
-        formset = ReviewCriterionFormSet(request.POST, instance=instrument)
-        if form.is_valid() and formset.is_valid():
-            total = sum(
-                item.cleaned_data.get('weight', Decimal('0'))
-                for item in formset.forms
-                if item.cleaned_data and not item.cleaned_data.get('DELETE')
-            )
-            if total != Decimal('100'):
-                formset._non_form_errors = formset.error_class([
-                    'Os pesos dos critérios devem totalizar 100%.'
-                ])
-            else:
-                with transaction.atomic():
-                    instrument = form.save(commit=False)
-                    instrument.event = event
-                    instrument.created_by = request.user
-                    instrument.version = (
-                        event.review_instruments
-                        .order_by('-version')
-                        .values_list('version', flat=True)
-                        .first()
-                        or 0
-                    ) + 1
-                    instrument.save()
-                    formset.instance = instrument
-                    formset.save()
-                messages.success(request, 'Instrumento de avaliação criado.')
-                return redirect('committee_dashboard', event_pk=event.pk)
-        return render(
-            request,
-            self.template_name,
-            {'event': event, 'form': form, 'formset': formset},
-        )
-
-
-class ReviewRoundCreateView(View):
-    template_name = 'reviews/round_form.html'
-
-    def get(self, request: HttpRequest, event_pk: int):
-        event = get_managed_event(request, event_pk)
-        return render(
-            request,
-            self.template_name,
-            {'event': event, 'form': ReviewRoundForm(event=event)},
-        )
-
-    def post(self, request: HttpRequest, event_pk: int):
-        event = get_managed_event(request, event_pk)
-        form = ReviewRoundForm(request.POST, event=event)
-        if form.is_valid():
-            round_ = form.save(commit=False)
-            round_.created_by = request.user
-            round_.full_clean()
-            round_.save()
-            messages.success(request, 'Rodada criada em rascunho.')
-            return redirect('review_round_manage', pk=round_.pk)
-        return render(
-            request,
-            self.template_name,
-            {'event': event, 'form': form},
-        )
-
-
-class ReviewRoundManageView(View):
-    template_name = 'reviews/round_manage.html'
-
-    def get_round(self, request, pk):
-        round_ = get_object_or_404(
-            ReviewRound.objects.select_related(
-                'paper__event',
-                'paper__eixo_tematico',
-                'submission',
-                'instrument',
-            ).prefetch_related(
-                'assignments__reviewer__user',
-                'instrument__criteria',
-            ),
-            pk=pk,
-        )
-        if not user_can_manage_event(request.user, round_.paper.event):
-            raise PermissionDenied
-        return round_
-
-    def get(self, request: HttpRequest, pk: int):
-        round_ = self.get_round(request, pk)
-        return render(
-            request,
-            self.template_name,
-            {
-                'round': round_,
-                'form': AssignmentForm(round_=round_),
-            },
-        )
-
-    def post(self, request: HttpRequest, pk: int):
-        round_ = self.get_round(request, pk)
-        if round_.status != ReviewRound.Status.DRAFT:
-            raise PermissionDenied
-        form = AssignmentForm(request.POST, round_=round_)
+    def post(self, request: HttpRequest, paper_pk: int):
+        paper = self.get_paper(request, paper_pk)
+        form = AssignmentForm(request.POST, paper=paper)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Distribuição atualizada.')
-            return redirect('review_round_manage', pk=round_.pk)
+            messages.success(request, 'Distribuicao atualizada.')
+            return redirect('paper_assignment_manage', paper_pk=paper.pk)
         return render(
             request,
             self.template_name,
-            {'round': round_, 'form': form},
+            {'paper': paper, 'form': form},
         )
-
-
-class ReviewRoundOpenView(View):
-    def post(self, request: HttpRequest, pk: int):
-        round_ = get_object_or_404(
-            ReviewRound.objects.select_related(
-                'paper__event',
-                'submission',
-                'instrument',
-            ),
-            pk=pk,
-        )
-        if not user_can_manage_event(request.user, round_.paper.event):
-            raise PermissionDenied
-        try:
-            round_.open()
-        except ValidationError as error:
-            messages.error(request, ' '.join(error.messages))
-        else:
-            messages.success(request, 'Rodada aberta para avaliação.')
-        return redirect('review_round_manage', pk=round_.pk)
-
-
-class ReviewRoundCloseView(View):
-    def post(self, request: HttpRequest, pk: int):
-        round_ = get_object_or_404(
-            ReviewRound.objects.select_related('paper__event'),
-            pk=pk,
-        )
-        if not user_can_manage_event(request.user, round_.paper.event):
-            raise PermissionDenied
-        try:
-            round_.close()
-        except ValidationError as error:
-            messages.error(request, ' '.join(error.messages))
-        else:
-            messages.success(request, 'Rodada encerrada.')
-        return redirect('review_round_manage', pk=round_.pk)
 
 
 class FinalDecisionCreateView(View):
     template_name = 'reviews/decision_form.html'
 
-    def get_round(self, request, pk):
-        round_ = get_object_or_404(
-            ReviewRound.objects.select_related(
-                'paper__event'
-            ).prefetch_related('assignments__review'),
-            pk=pk,
+    def get_paper(self, request, paper_pk):
+        paper = get_object_or_404(
+            Paper.objects.select_related('event').prefetch_related(
+                'review_assignments__review',
+                'review_assignments__reviewer__user',
+            ),
+            pk=paper_pk,
         )
-        if not user_can_decide_event(request.user, round_.paper.event):
+        if not user_can_decide_event(request.user, paper.event):
             raise PermissionDenied
-        return round_
+        return paper
 
-    def get(self, request: HttpRequest, pk: int):
-        round_ = self.get_round(request, pk)
+    def get(self, request: HttpRequest, paper_pk: int):
+        paper = self.get_paper(request, paper_pk)
+        decision = getattr(paper, 'final_decision', None)
         return render(
             request,
             self.template_name,
-            {'round': round_, 'form': FinalDecisionForm(round_=round_)},
+            {
+                'paper': paper,
+                'form': FinalDecisionForm(paper=paper, instance=decision),
+            },
         )
 
-    def post(self, request: HttpRequest, pk: int):
-        round_ = self.get_round(request, pk)
-        form = FinalDecisionForm(request.POST, round_=round_)
+    def post(self, request: HttpRequest, paper_pk: int):
+        paper = self.get_paper(request, paper_pk)
+        decision = getattr(paper, 'final_decision', None)
+        form = FinalDecisionForm(request.POST, paper=paper, instance=decision)
         if form.is_valid():
             decision = form.save(commit=False)
-            decision.round = round_
+            decision.paper = paper
             decision.decided_by = request.user
             decision.save()
-            messages.success(request, 'Decisão final publicada.')
+            messages.success(request, 'Decisao final publicada.')
             return redirect(
                 'committee_dashboard',
-                event_pk=round_.paper.event_id,
+                event_pk=paper.event_id,
             )
         return render(
             request,
             self.template_name,
-            {'round': round_, 'form': form},
+            {'paper': paper, 'form': form},
         )
 
 
@@ -424,7 +283,7 @@ class SubmissionDownloadView(View):
             request.user, event
         ) or user_can_decide_event(request.user, event)
         is_assigned = ReviewAssignment.objects.filter(
-            round__submission=submission,
+            paper=submission.paper,
             reviewer__user=request.user,
         ).exists()
         if not (is_author or is_committee or is_assigned):
@@ -432,7 +291,7 @@ class SubmissionDownloadView(View):
         try:
             file_handle = submission.file.open('rb')
         except FileNotFoundError as error:
-            raise Http404('Arquivo não encontrado.') from error
+            raise Http404('Arquivo nao encontrado.') from error
         filename = f'trabalho-{submission.paper_id}-v{submission.version}.pdf'
         return FileResponse(
             file_handle,

@@ -29,32 +29,12 @@ urlpatterns = [
         name='reviewer_create',
     ),
     path(
-        'eventos/<int:event_pk>/comissao/instrumentos/novo/',
-        views.ReviewInstrumentCreateView.as_view(),
-        name='review_instrument_create',
+        'trabalhos/<int:paper_pk>/avaliadores/',
+        views.PaperAssignmentManageView.as_view(),
+        name='paper_assignment_manage',
     ),
     path(
-        'eventos/<int:event_pk>/comissao/rodadas/nova/',
-        views.ReviewRoundCreateView.as_view(),
-        name='review_round_create',
-    ),
-    path(
-        'rodadas/<int:pk>/',
-        views.ReviewRoundManageView.as_view(),
-        name='review_round_manage',
-    ),
-    path(
-        'rodadas/<int:pk>/abrir/',
-        views.ReviewRoundOpenView.as_view(),
-        name='review_round_open',
-    ),
-    path(
-        'rodadas/<int:pk>/encerrar/',
-        views.ReviewRoundCloseView.as_view(),
-        name='review_round_close',
-    ),
-    path(
-        'rodadas/<int:pk>/decisao/',
+        'trabalhos/<int:paper_pk>/decisao/',
         views.FinalDecisionCreateView.as_view(),
         name='final_decision_create',
     ),

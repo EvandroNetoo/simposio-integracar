@@ -5,36 +5,30 @@
     <section class="space-y-4">
         <div class="gov-page-header">
             <div>
-                <h1 class="text-2xl font-bold">Publicar decisão final</h1>
-                <p class="text-sm">{{ round }}</p>
+                <h1 class="text-2xl font-bold">Decisao final</h1>
+                <p class="text-sm">{{ paper.title }}</p>
             </div>
             <a class="btn btn-ghost"
-               href="{% url 'committee_dashboard' event_pk=round.paper.event_id %}">Voltar</a>
+               href="{% url 'committee_dashboard' event_pk=paper.event_id %}">Voltar</a>
         </div>
-        <div class="card bg-base-100 border border-base-300">
-            <div class="card-body">
-                <div class="mb-4 space-y-2">
 
-                    {% for assignment in round.assignments.all %}
+        <div class="card bg-base-100 border border-base-300">
+            <div class="card-body space-y-4">
+                <div class="space-y-3">
+                    <h2 class="card-title">Pareceres enviados</h2>
+
+                    {% for assignment in paper.review_assignments.all %}
 
                         {% if assignment.review %}
 
                             <div class="rounded border border-base-300 p-3 text-sm">
                                 <p class="font-semibold">
-                                    Parecer: {{ assignment.review.weighted_score }} ·
-                                    {{ assignment.review.get_recommendation_display }}
+                                    {{ assignment.reviewer.user.full_name|default:assignment.reviewer.user.email }}
+                                    · {{ assignment.review.get_recommendation_display }}
                                 </p>
-                                <p class="mt-2 whitespace-pre-line">
+                                <p class="whitespace-pre-line">
                                     {{ assignment.review.comments_to_author }}
                                 </p>
-
-                                {% if assignment.review.internal_comments %}
-
-                                    <p class="mt-2 text-base-content/60 whitespace-pre-line">
-                                        Interno: {{ assignment.review.internal_comments }}
-                                    </p>
-
-                                {% endif %}
                             </div>
 
                         {% endif %}
@@ -44,7 +38,7 @@
                 <form method="post" class="space-y-4">
                     {% csrf_token %}
                     <c-django-form />
-                    <button class="btn btn-primary">Publicar decisão</button>
+                    <button class="btn btn-primary">Publicar decisao</button>
                 </form>
             </div>
         </div>
