@@ -3,6 +3,8 @@ from django.contrib.auth.forms import (
     AuthenticationForm,
     BaseUserCreationForm,
     PasswordChangeForm,
+    PasswordResetForm,
+    SetPasswordForm,
 )
 
 from accounts.models import Profile, User
@@ -195,3 +197,33 @@ class CustomPasswordChangeForm(NoRequiredAttrFormMixin, PasswordChangeForm):
                 field_name, ''
             )
             field.widget.attrs['autofocus'] = False
+
+
+class CustomPasswordResetForm(NoRequiredAttrFormMixin, PasswordResetForm):
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '')
+        return email.lower()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].label = 'E-mail'
+        self.fields['email'].widget.attrs.update({
+            'placeholder': 'Digite seu email cadastrado',
+            'autofocus': True,
+        })
+
+
+class CustomSetPasswordForm(NoRequiredAttrFormMixin, SetPasswordForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        placeholders = {
+            'new_password1': 'Digite sua nova senha',
+            'new_password2': 'Confirme sua nova senha',
+        }
+
+        for field_name, field in self.fields.items():
+            field.widget.attrs['placeholder'] = placeholders.get(
+                field_name,
+                '',
+            )

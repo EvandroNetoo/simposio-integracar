@@ -91,6 +91,17 @@ AUTH_PASSWORD_VALIDATORS = [
 LOGIN_URL = 'signin'
 
 
+# Email
+
+EMAIL_HOST = env_settings.EMAIL_HOST
+EMAIL_PORT = env_settings.EMAIL_PORT
+EMAIL_HOST_USER = env_settings.EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = env_settings.EMAIL_HOST_PASSWORD
+EMAIL_USE_TLS = env_settings.EMAIL_USE_TLS
+EMAIL_USE_SSL = env_settings.EMAIL_USE_SSL
+DEFAULT_FROM_EMAIL = env_settings.DEFAULT_FROM_EMAIL
+
+
 # Internationalization
 
 LANGUAGE_CODE = 'pt-br'
@@ -104,11 +115,11 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 
-STATIC_URL = "/static/"
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-MEDIA_URL = "/media/"
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 STORAGES = {

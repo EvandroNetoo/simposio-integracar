@@ -18,5 +18,14 @@ class EnvSettings(BaseSettings):
     # Database
     DATABASE_URL: str = 'sqlite:///db.sqlite3'
 
+    # Email
+    EMAIL_HOST: str = 'localhost'
+    EMAIL_PORT: int = 25
+    EMAIL_HOST_USER: str = ''
+    EMAIL_HOST_PASSWORD: str = ''
+    EMAIL_USE_TLS: bool = False
+    EMAIL_USE_SSL: bool = False
+    DEFAULT_FROM_EMAIL: str = 'noreply@localhost'
+
 
 env_settings = EnvSettings()
