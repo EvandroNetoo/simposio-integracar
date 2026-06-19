@@ -22,7 +22,11 @@ jobs:
       - name: Add SSH known host
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>&1 || {
+            echo "Warning: ssh-keyscan failed. Adding host with StrictHostKeyChecking=no"
+            echo "Host *" >> ~/.ssh/config
+            echo "  StrictHostKeyChecking=no" >> ~/.ssh/config
+          }
 
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
