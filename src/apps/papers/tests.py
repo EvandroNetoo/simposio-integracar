@@ -8,7 +8,7 @@ from events.forms import EixoTematicoFormSet
 from events.models import EixoTematico, Event
 
 from papers.forms import PaperForm
-from papers.models import Paper
+from papers.models import Coauthor, Paper
 
 
 @override_settings(
@@ -225,3 +225,70 @@ class EixoTematicoTestCase(TestCase):
         self.assertTrue(form.is_valid())
         updated_paper = form.save()
         self.assertEqual(updated_paper.eixo_tematico, second_eixo)
+
+    def test_paper_update_saves_user_and_manual_coauthors_in_order(self):
+        self.client.force_login(self.user)
+        event = self.create_event()
+        eixo = EixoTematico.objects.create(event=event, name='Educação')
+        paper = Paper.objects.create(
+            user=self.user,
+            event=event,
+            eixo_tematico=eixo,
+            title='Trabalho',
+            abstract='Resumo',
+        )
+        coauthor_user = User.objects.create_user(
+            email='coauthor@example.com',
+            first_name='Coauthor',
+            surname='User',
+        )
+
+        response = self.client.post(
+            reverse('paper_change', args=[paper.pk]),
+            {
+                'title': 'Trabalho atualizado',
+                'abstract': 'Resumo atualizado',
+                'eixo_tematico': eixo.pk,
+                'coauthors-TOTAL_FORMS': '2',
+                'coauthors-INITIAL_FORMS': '0',
+                'coauthors-MIN_NUM_FORMS': '0',
+                'coauthors-MAX_NUM_FORMS': '1000',
+                'coauthors-0-user': coauthor_user.pk,
+                'coauthors-0-name': '',
+                'coauthors-0-email': '',
+                'coauthors-0-institution': '',
+                'coauthors-0-affiliation_type': '',
+                'coauthors-0-authorship_order': '2',
+                'coauthors-1-user': '',
+                'coauthors-1-name': 'Manual Coauthor',
+                'coauthors-1-email': 'manual@example.com',
+                'coauthors-1-institution': 'Instituição',
+                'coauthors-1-affiliation_type': Coauthor.AffiliationType.OTHER,
+                'coauthors-1-authorship_order': '3',
+            },
+        )
+
+        self.assertRedirects(response, reverse('paper_detail', args=[paper.pk]))
+        coauthors = list(paper.coauthors.order_by('authorship_order'))
+        self.assertEqual(len(coauthors), 2)
+        self.assertEqual(coauthors[0].user, coauthor_user)
+        self.assertEqual(coauthors[0].authorship_order, 2)
+        self.assertEqual(coauthors[1].email, 'manual@example.com')
+        self.assertEqual(coauthors[1].authorship_order, 3)
+
+    def test_paper_detail_shows_pdf_upload_label(self):
+        self.client.force_login(self.user)
+        event = self.create_event()
+        eixo = EixoTematico.objects.create(event=event, name='Educação')
+        paper = Paper.objects.create(
+            user=self.user,
+            event=event,
+            eixo_tematico=eixo,
+            title='Trabalho',
+            abstract='Resumo',
+        )
+
+        response = self.client.get(reverse('paper_detail', args=[paper.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Fazer upload do PDF')

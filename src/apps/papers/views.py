@@ -110,7 +110,7 @@ class PaperCreateView(PaperFormBaseView):
         return {
             'page_title': 'Enviar trabalho',
             'page_subtitle': 'Preencha os dados para cadastrar um novo trabalho.',
-            'submit_label': 'Enviar trabalho',
+            'submit_label': 'Continuar para envio de PDF',
             'back_url': reverse('event_detail', kwargs={'pk': self.event.pk}),
             'back_label': 'Voltar ao evento',
             'main_author': self.get_main_author(request.user),

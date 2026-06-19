@@ -68,44 +68,71 @@
 
                     <div class="divider">Coautores</div>
 
-                    <div class="space-y-4"
+                    <div class="space-y-5"
                          data-coauthor-formset
                          data-prefix="{{ coauthor_formset.prefix }}">
                         {{ coauthor_formset.management_form }}
 
-                        <div class="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <p class="text-sm font-medium">Lista de coautores</p>
-                                <p class="text-xs text-base-content/60">
-                                    Adicione quantos coautores precisar e defina a ordem de autoria.
-                                </p>
+                        <div class="rounded-lg border border-base-300 bg-base-200/50 p-4">
+                            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                <div class="space-y-1">
+                                    <p class="text-base font-semibold">Autores do trabalho</p>
+                                    <p class="text-sm text-base-content/70">
+                                        O autor principal ja esta incluido. Adicione coautores cadastrados no sistema ou preencha os dados manualmente.
+                                    </p>
+                                </div>
+                                <button type="button" class="btn btn-secondary gap-2" data-coauthor-add>
+                                    <i class="ph ph-user-plus text-lg"></i>
+                                    Adicionar coautor
+                                </button>
                             </div>
+                        </div>
+
+                        <div class="rounded-lg border border-dashed border-base-300 bg-base-100 p-6 text-center"
+                             data-coauthor-empty-state>
+                            <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                <i class="ph ph-users-three text-2xl"></i>
+                            </div>
+                            <p class="text-sm font-medium">Nenhum coautor adicionado</p>
+                            <p class="mt-1 text-xs text-base-content/60">
+                                Se o trabalho tiver coautores, comece pelo botao abaixo.
+                            </p>
                             <button type="button"
-                                    class="btn btn-secondary btn-sm gap-2"
-                                    data-coauthor-add
-                                    hx-on:click="window.coauthorForm && window.coauthorForm.addRow()">
+                                    class="btn btn-secondary btn-sm mt-4 gap-2"
+                                    data-coauthor-add>
                                 <i class="ph ph-user-plus text-lg"></i>
                                 Adicionar coautor
                             </button>
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p class="text-sm font-medium">Coautores adicionados</p>
+                                <p class="text-xs text-base-content/60">
+                                    Escolha o tipo de cadastro em cada cartao e confira a ordem de autoria no resumo.
+                                </p>
+                            </div>
                         </div>
 
                         <div class="space-y-3" data-coauthor-list>
 
                             {% for coauthor_form in coauthor_formset %}
 
-                                <div class="card card-sm bg-base-100 border border-base-300"
+                                <div class="card card-sm bg-base-100 border border-base-300 shadow-sm"
                                      data-coauthor-row
                                      data-coauthor-prefix="{{ coauthor_form.prefix }}">
-                                    <div class="card-body gap-3 p-4">
-                                        <div class="flex flex-wrap items-center justify-between gap-3">
-                                            <div class="flex flex-wrap items-center gap-2">
+                                    <div class="card-body gap-4 p-4">
+                                        <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                            <div class="space-y-1">
                                                 <span class="badge badge-primary badge-sm" data-coauthor-title>
                                                     Coautor {{ forloop.counter }}
                                                 </span>
-                                                <span class="text-xs text-base-content/60">Escolha o tipo de cadastro</span>
+                                                <p class="text-xs text-base-content/60">
+                                                    Informe se esta pessoa ja tem conta no sistema ou cadastre os dados manualmente.
+                                                </p>
                                             </div>
                                             <button type="button"
-                                                    class="btn btn-ghost btn-xs text-error gap-2"
+                                                    class="btn btn-ghost btn-sm text-error gap-2 md:self-start"
                                                     data-coauthor-remove>
                                                 <i class="ph ph-trash text-base"></i>
                                                 Remover
@@ -127,16 +154,20 @@
 
                                         {% endif %}
 
-                                        <div class="flex flex-wrap items-center gap-2">
-                                            <span class="text-xs uppercase text-base-content/60">Cadastro</span>
-                                            <div class="join">
-                                                <button type="button" class="btn btn-xs join-item" data-coauthor-mode="user">
+                                        <div class="rounded-lg bg-base-200/70 p-3">
+                                            <p class="mb-2 text-xs font-medium uppercase text-base-content/60">
+                                                Tipo de cadastro
+                                            </p>
+                                            <div class="join w-full flex flex-col sm:flex-row">
+                                                <button type="button"
+                                                        class="btn btn-sm join-item flex-1 gap-2"
+                                                        data-coauthor-mode="user">
                                                     <i class="ph ph-users-three text-base"></i>
                                                     Usuário do sistema
                                                     <span class="badge badge-success badge-sm">Recomendado</span>
                                                 </button>
                                                 <button type="button"
-                                                        class="btn btn-xs join-item"
+                                                        class="btn btn-sm join-item flex-1 gap-2"
                                                         data-coauthor-mode="manual">
                                                     <i class="ph ph-pencil-simple text-base"></i>
                                                     Preencher manualmente
@@ -144,13 +175,18 @@
                                             </div>
                                         </div>
 
-                                        <div class="grid gap-4 md:grid-cols-2" data-coauthor-section="user">
+                                        <div class="rounded-lg border border-base-300 p-4"
+                                             data-coauthor-section="user">
                                             <div data-coauthor-user-field>
                                                 <c-django-form.field :field="coauthor_form.user" />
                                             </div>
+                                            <p class="mt-2 text-xs text-base-content/60">
+                                                Use esta opcao quando o coautor ja possui cadastro na plataforma.
+                                            </p>
                                         </div>
 
-                                        <div class="grid gap-4 md:grid-cols-2" data-coauthor-section="manual">
+                                        <div class="grid gap-4 rounded-lg border border-base-300 p-4 md:grid-cols-2"
+                                             data-coauthor-section="manual">
                                             <div data-coauthor-manual-field>
                                                 <c-django-form.field :field="coauthor_form.name" />
                                             </div>
@@ -183,20 +219,18 @@
                             Você poderá alterar os coautores depois do envio.
                         </p>
 
-                        <div class="divider">Ordem de autoria</div>
-
                         <div class="card bg-base-200/60 border border-base-300"
                              data-author-order
                              data-main-author="{{ main_author|default:request.user.full_name|default:request.user.email }}">
                             <div class="card-body gap-4">
                                 <div class="flex flex-wrap items-start justify-between gap-3">
                                     <div>
-                                        <p class="text-sm font-medium">Arraste para ordenar</p>
+                                        <p class="text-sm font-medium">Resumo da ordem de autoria</p>
                                         <p class="text-xs text-base-content/60">
-                                            A ordem inclui o autor principal e pode ser ajustada depois.
+                                            O autor principal fica em primeiro. Arraste os coautores para ajustar as demais posicoes.
                                         </p>
                                     </div>
-                                    <span class="badge badge-secondary badge-sm">Drag & drop</span>
+                                    <span class="badge badge-secondary badge-sm">Ordem final</span>
                                 </div>
 
                                 <ul class="space-y-2" data-author-order-list>
@@ -211,33 +245,39 @@
 
                             {% with coauthor_form=coauthor_formset.empty_form %}
 
-                                <div class="card card-sm bg-base-100 border border-base-300"
+                                <div class="card card-sm bg-base-100 border border-base-300 shadow-sm"
                                      data-coauthor-row
                                      data-coauthor-prefix="__prefix__">
-                                    <div class="card-body gap-3 p-4">
-                                        <div class="flex flex-wrap items-center justify-between gap-3">
-                                            <div class="flex flex-wrap items-center gap-2">
+                                    <div class="card-body gap-4 p-4">
+                                        <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                            <div class="space-y-1">
                                                 <span class="badge badge-primary badge-sm" data-coauthor-title>Coautor</span>
-                                                <span class="text-xs text-base-content/60">Escolha o tipo de cadastro</span>
+                                                <p class="text-xs text-base-content/60">
+                                                    Informe se esta pessoa ja tem conta no sistema ou cadastre os dados manualmente.
+                                                </p>
                                             </div>
                                             <button type="button"
-                                                    class="btn btn-ghost btn-xs text-error gap-2"
+                                                    class="btn btn-ghost btn-sm text-error gap-2 md:self-start"
                                                     data-coauthor-remove>
                                                 <i class="ph ph-trash text-base"></i>
                                                 Remover
                                             </button>
                                         </div>
 
-                                        <div class="flex flex-wrap items-center gap-2">
-                                            <span class="text-xs uppercase text-base-content/60">Cadastro</span>
-                                            <div class="join">
-                                                <button type="button" class="btn btn-xs join-item" data-coauthor-mode="user">
+                                        <div class="rounded-lg bg-base-200/70 p-3">
+                                            <p class="mb-2 text-xs font-medium uppercase text-base-content/60">
+                                                Tipo de cadastro
+                                            </p>
+                                            <div class="join w-full flex flex-col sm:flex-row">
+                                                <button type="button"
+                                                        class="btn btn-sm join-item flex-1 gap-2"
+                                                        data-coauthor-mode="user">
                                                     <i class="ph ph-users-three text-base"></i>
                                                     Usuário do sistema
                                                     <span class="badge badge-success badge-sm">Recomendado</span>
                                                 </button>
                                                 <button type="button"
-                                                        class="btn btn-xs join-item"
+                                                        class="btn btn-sm join-item flex-1 gap-2"
                                                         data-coauthor-mode="manual">
                                                     <i class="ph ph-pencil-simple text-base"></i>
                                                     Preencher manualmente
@@ -245,13 +285,18 @@
                                             </div>
                                         </div>
 
-                                        <div class="grid gap-4 md:grid-cols-2" data-coauthor-section="user">
+                                        <div class="rounded-lg border border-base-300 p-4"
+                                             data-coauthor-section="user">
                                             <div data-coauthor-user-field>
                                                 <c-django-form.field :field="coauthor_form.user" />
                                             </div>
+                                            <p class="mt-2 text-xs text-base-content/60">
+                                                Use esta opcao quando o coautor ja possui cadastro na plataforma.
+                                            </p>
                                         </div>
 
-                                        <div class="grid gap-4 md:grid-cols-2" data-coauthor-section="manual">
+                                        <div class="grid gap-4 rounded-lg border border-base-300 p-4 md:grid-cols-2"
+                                             data-coauthor-section="manual">
                                             <div data-coauthor-manual-field>
                                                 <c-django-form.field :field="coauthor_form.name" />
                                             </div>
@@ -310,6 +355,9 @@
                 'input[name$="-TOTAL_FORMS"]'
             );
             const template = formsetRoot.querySelector('#coauthor-empty-template');
+            const emptyState = formsetRoot.querySelector(
+                '[data-coauthor-empty-state]'
+            );
             const orderContainer = document.querySelector('[data-author-order]');
             const orderList = orderContainer ?
                 orderContainer.querySelector('[data-author-order-list]') :
@@ -500,7 +548,15 @@
             function updateTitles() {
                 const rows = Array.from(
                     list.querySelectorAll('[data-coauthor-row]')
-                ).filter((row) => !row.classList.contains('hidden'));
+                ).filter((row) => {
+                    const deleteInput = row.querySelector('input[name$="-DELETE"]');
+                    return !row.classList.contains('hidden') &&
+                        !(deleteInput && deleteInput.checked);
+                });
+
+                if (emptyState) {
+                    emptyState.classList.toggle('hidden', rows.length > 0);
+                }
 
                 rows.forEach((row, index) => {
                     const label = row.querySelector('[data-coauthor-title]');
@@ -663,6 +719,10 @@
 
             window.coauthorForm = window.coauthorForm || {};
             window.coauthorForm.addRow = addRow;
+
+            formsetRoot.querySelectorAll('[data-coauthor-add]').forEach((button) => {
+                button.addEventListener('click', addRow);
+            });
         })();
     </script>
 
