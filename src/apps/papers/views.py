@@ -1,6 +1,7 @@
 from accounts.models import Profile, User
 from django.contrib.auth.decorators import user_passes_test
-from django.http import HttpResponse
+from django.db.models import Q
+from django.http import Http404, HttpResponse
 from django.http.request import HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
@@ -10,6 +11,7 @@ from events.models import Event
 
 from papers.forms import CoauthorFormSet, PaperForm, SubmissionForm
 from papers.models import Paper, Submission
+from reviews.notifications import notify_submission_received
 
 
 class PaperFormBaseView(View):
@@ -50,9 +52,12 @@ class PaperListView(View):
 
     def get(self, request: HttpRequest):
         papers = (
-            Paper.objects.filter(user=request.user)
+            Paper.objects.filter(
+                Q(user=request.user) | Q(coauthors__user=request.user)
+            )
             .select_related('event', 'eixo_tematico')
-            .prefetch_related('coauthors')
+            .prefetch_related('coauthors__user')
+            .distinct()
             .order_by('-created_at')
         )
         context = {
@@ -166,10 +171,15 @@ class PaperDetailView(View):
                 'review_assignments__review',
             ),
             pk=pk,
-            user=request.user,
         )
+        if (
+            paper.user_id != request.user.id
+            and not paper.coauthors.filter(user=request.user).exists()
+        ):
+            raise Http404
         coauthors = paper.coauthors.select_related('user').all()
         submissions = list(paper.submission_set.all().order_by('created_at'))
+        assignments = list(paper.review_assignments.all())
         submission_items = [
             {
                 'submission': submission,
@@ -181,7 +191,10 @@ class PaperDetailView(View):
             'event': paper.event,
             'coauthors': coauthors,
             'submission_items': submission_items,
-            'assignments': paper.review_assignments.all(),
+            'assignments': assignments,
+            'published_reviews_count': sum(
+                1 for assignment in assignments if hasattr(assignment, 'review')
+            ),
             'has_active_review': paper.status == Paper.Status.UNDER_REVIEW,
         }
         return render(request, self.template_name, context)
@@ -289,11 +302,17 @@ class SubmissionCreateView(View):
         submission: Submission = form.save(commit=False)
         submission.paper = paper
         submission.save()
+        is_correction = paper.status == Paper.Status.APPROVED_WITH_CHANGES
         if paper.status == Paper.Status.APPROVED_WITH_CHANGES:
             paper.status = Paper.Status.CORRECTION_SUBMITTED
         else:
             paper.status = Paper.Status.SUBMITTED
         paper.save(update_fields=('status',))
+        notify_submission_received(
+            request,
+            submission,
+            correction=is_correction,
+        )
         response = HttpResponse('')
         response.headers['HX-Redirect'] = reverse(
             'paper_detail',

@@ -14,9 +14,16 @@ from reviews.forms import (
     ReviewForm,
 )
 from reviews.models import (
+    CommitteeMember,
     ReviewAssignment,
+    Reviewer,
     user_can_decide_event,
     user_can_manage_event,
+)
+from reviews.notifications import (
+    notify_final_decision_published,
+    notify_review_published,
+    notify_reviewers_assigned,
 )
 
 
@@ -92,13 +99,15 @@ class ReviewDetailView(View):
     def post(self, request: HttpRequest, pk: int):
         assignment = self.get_assignment(request, pk)
         review = getattr(assignment, 'review', None)
+        is_update = review is not None
         form = ReviewForm(
             request.POST,
             assignment=assignment,
             instance=review,
         )
         if form.is_valid():
-            form.save()
+            review = form.save()
+            notify_review_published(request, review, updated=is_update)
             messages.success(
                 request,
                 'Parecer salvo e publicado para o autor.',
@@ -170,6 +179,25 @@ class CommitteeMemberCreateView(View):
         return redirect('committee_dashboard', event_pk=event.pk)
 
 
+class CommitteeMemberDeleteView(View):
+    def post(self, request: HttpRequest, event_pk: int, member_pk: int):
+        event = get_managed_event(request, event_pk)
+        member = get_object_or_404(
+            CommitteeMember,
+            pk=member_pk,
+            event=event,
+        )
+        if member.user_id == event.owner_id:
+            messages.error(
+                request,
+                'O dono do evento ja possui os papeis de gestor e decisor.',
+            )
+            return redirect('committee_dashboard', event_pk=event.pk)
+        member.delete()
+        messages.success(request, 'Membro da comissao removido.')
+        return redirect('committee_dashboard', event_pk=event.pk)
+
+
 class ReviewerCreateView(View):
     def post(self, request: HttpRequest, event_pk: int):
         event = get_managed_event(request, event_pk)
@@ -186,12 +214,41 @@ class ReviewerCreateView(View):
         return redirect('committee_dashboard', event_pk=event.pk)
 
 
+class ReviewerDeleteView(View):
+    def post(self, request: HttpRequest, event_pk: int, reviewer_pk: int):
+        event = get_managed_event(request, event_pk)
+        reviewer = get_object_or_404(
+            Reviewer.objects.select_related('user'),
+            pk=reviewer_pk,
+            event=event,
+        )
+        if reviewer.assignments.filter(review__isnull=False).exists():
+            messages.error(
+                request,
+                (
+                    'Este avaliador ja enviou pareceres. O historico precisa '
+                    'ser preservado.'
+                ),
+            )
+            return redirect('committee_dashboard', event_pk=event.pk)
+        reviewer.delete()
+        messages.success(
+            request,
+            'Avaliador removido junto com suas atribuicoes pendentes.',
+        )
+        return redirect('committee_dashboard', event_pk=event.pk)
+
+
 class PaperAssignmentManageView(View):
     template_name = 'reviews/assignment_manage.html'
 
     def get_paper(self, request, paper_pk):
         paper = get_object_or_404(
-            Paper.objects.select_related('event', 'eixo_tematico'),
+            Paper.objects.select_related('event', 'eixo_tematico')
+            .prefetch_related(
+                'review_assignments__review',
+                'review_assignments__reviewer__user',
+            ),
             pk=paper_pk,
         )
         if not user_can_manage_event(request.user, paper.event):
@@ -213,7 +270,8 @@ class PaperAssignmentManageView(View):
         paper = self.get_paper(request, paper_pk)
         form = AssignmentForm(request.POST, paper=paper)
         if form.is_valid():
-            form.save()
+            created_assignments = form.save()
+            notify_reviewers_assigned(request, created_assignments)
             messages.success(request, 'Distribuicao atualizada.')
             return redirect('paper_assignment_manage', paper_pk=paper.pk)
         return render(
@@ -221,6 +279,32 @@ class PaperAssignmentManageView(View):
             self.template_name,
             {'paper': paper, 'form': form},
         )
+
+
+class ReviewAssignmentDeleteView(View):
+    def post(self, request: HttpRequest, assignment_pk: int):
+        assignment = get_object_or_404(
+            ReviewAssignment.objects.select_related(
+                'paper__event',
+                'reviewer__user',
+            ),
+            pk=assignment_pk,
+        )
+        if not user_can_manage_event(request.user, assignment.paper.event):
+            raise PermissionDenied
+        if hasattr(assignment, 'review'):
+            messages.error(
+                request,
+                'Esta atribuicao ja possui parecer enviado e nao pode ser removida.',
+            )
+            return redirect(
+                'paper_assignment_manage',
+                paper_pk=assignment.paper_id,
+            )
+        paper_pk = assignment.paper_id
+        assignment.delete()
+        messages.success(request, 'Atribuicao de avaliador removida.')
+        return redirect('paper_assignment_manage', paper_pk=paper_pk)
 
 
 class FinalDecisionCreateView(View):
@@ -259,6 +343,7 @@ class FinalDecisionCreateView(View):
             decision.paper = paper
             decision.decided_by = request.user
             decision.save()
+            notify_final_decision_published(request, decision)
             messages.success(request, 'Decisao final publicada.')
             return redirect(
                 'committee_dashboard',

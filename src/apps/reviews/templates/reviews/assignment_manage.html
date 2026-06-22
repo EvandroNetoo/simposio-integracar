@@ -19,10 +19,64 @@
                 <p class="text-sm">
                     Eixo do trabalho: <strong>{{ paper.eixo_tematico.name }}</strong>.
                 </p>
+                <div class="rounded-lg border border-base-300 p-4">
+                    <h2 class="text-base font-semibold">Atribuicoes atuais</h2>
+                    <ul class="mt-3 space-y-2 text-sm">
+
+                        {% for assignment in paper.review_assignments.all %}
+
+                            <li class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-base-200 p-3">
+                                <div>
+                                    <p class="font-medium">
+                                        {{ assignment.reviewer.user.full_name|default:assignment.reviewer.user.email }}
+                                    </p>
+
+                                    {% if assignment.review %}
+
+                                        <span class="badge badge-success badge-sm">parecer enviado</span>
+
+                                    {% else %}
+
+                                        <span class="badge badge-warning badge-sm">pendente</span>
+
+                                    {% endif %}
+                                </div>
+
+                                {% if assignment.review %}
+
+                                    <span class="text-xs text-base-content/60">
+                                        Historico preservado
+                                    </span>
+
+                                {% else %}
+
+                                    <form method="post"
+                                          action="{% url 'review_assignment_delete' assignment_pk=assignment.pk %}"
+                                          onsubmit="return confirm('Remover esta atribuicao pendente?');">
+                                        {% csrf_token %}
+                                        <button class="btn btn-ghost btn-xs text-error gap-1">
+                                            <i class="ph ph-trash text-base" aria-hidden="true"></i>
+                                            Remover
+                                        </button>
+                                    </form>
+
+                                {% endif %}
+                            </li>
+
+                        {% empty %}
+
+                            <li class="text-base-content/60">Nenhum avaliador atribuido.</li>
+
+                        {% endfor %}
+                    </ul>
+                </div>
                 <form method="post" class="space-y-4">
                     {% csrf_token %}
                     <c-django-form />
-                    <button class="btn btn-primary">Salvar distribuicao</button>
+                    <button class="btn btn-primary gap-2">
+                        <i class="ph ph-check text-lg" aria-hidden="true"></i>
+                        Salvar distribuicao
+                    </button>
                 </form>
             </div>
         </div>

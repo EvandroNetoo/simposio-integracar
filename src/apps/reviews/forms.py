@@ -23,6 +23,14 @@ class CommitteeMemberForm(NoRequiredAttrFormMixin, forms.ModelForm):
     def __init__(self, *args, event=None, **kwargs):
         self.event = event
         super().__init__(*args, **kwargs)
+        self.fields['is_manager'].help_text = (
+            'Gestores gerenciam a comissao, avaliadores e a distribuicao '
+            'dos trabalhos.'
+        )
+        self.fields['is_decider'].help_text = (
+            'Decisores publicam a decisao final dos trabalhos apos os '
+            'pareceres.'
+        )
 
     def clean_user(self):
         user = self.cleaned_data['user']
@@ -97,6 +105,14 @@ class AssignmentForm(NoRequiredAttrFormMixin, forms.Form):
 
     def clean_reviewers(self):
         reviewers = self.cleaned_data['reviewers']
+        selected = set(reviewers.values_list('id', flat=True))
+        protected = self.paper.review_assignments.filter(
+            review__isnull=False,
+        ).exclude(reviewer_id__in=selected)
+        if protected.exists():
+            raise ValidationError(
+                'Atribuicoes com parecer enviado nao podem ser removidas.'
+            )
         for reviewer in reviewers:
             assignment = ReviewAssignment(
                 reviewer=reviewer,
@@ -116,6 +132,7 @@ class AssignmentForm(NoRequiredAttrFormMixin, forms.Form):
         existing = set(
             self.paper.review_assignments.values_list('reviewer_id', flat=True)
         )
+        created_assignments = []
         for reviewer_id in selected - existing:
             assignment = ReviewAssignment(
                 reviewer_id=reviewer_id,
@@ -123,6 +140,7 @@ class AssignmentForm(NoRequiredAttrFormMixin, forms.Form):
             )
             assignment.full_clean()
             assignment.save()
+            created_assignments.append(assignment)
         if selected and self.paper.status not in {
             self.paper.Status.APPROVED,
             self.paper.Status.APPROVED_WITH_CHANGES,
@@ -130,6 +148,7 @@ class AssignmentForm(NoRequiredAttrFormMixin, forms.Form):
         }:
             self.paper.status = self.paper.Status.UNDER_REVIEW
             self.paper.save(update_fields=('status',))
+        return created_assignments
 
 
 class ReviewForm(NoRequiredAttrFormMixin, forms.ModelForm):

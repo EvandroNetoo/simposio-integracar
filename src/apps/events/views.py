@@ -4,7 +4,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views import View
 from papers.models import Paper
-from reviews.models import user_can_decide_event, user_can_manage_event
+from reviews.models import (
+    Reviewer,
+    user_can_decide_event,
+    user_can_manage_event,
+)
 
 from events.forms import EixoTematicoFormSet, EventForm
 from events.models import Event
@@ -104,6 +108,122 @@ class EventUpdateView(EventCreateView):
 class EventDetailView(View):
     template_name = 'events/event_detail.html'
 
+    def get_management_dashboard(self, event):
+        event_papers = list(
+            Paper.objects.filter(event=event)
+            .select_related('eixo_tematico', 'final_decision')
+            .prefetch_related(
+                'review_assignments__review',
+                'review_assignments__reviewer__user',
+            )
+            .order_by('title')
+        )
+        axes = {
+            eixo.pk: {
+                'name': eixo.name,
+                'total': 0,
+                'submitted': 0,
+                'evaluated': 0,
+                'pending': 0,
+            }
+            for eixo in event.eixos_tematicos.order_by('name')
+        }
+        status_counts = {status: 0 for status, _label in Paper.Status.choices}
+        total_assignments = 0
+        completed_assignments = 0
+        evaluated_papers = 0
+        decided_papers = 0
+        pending_papers = 0
+        paper_details = []
+
+        for paper in event_papers:
+            assignments = list(paper.review_assignments.all())
+            assignments_total = len(assignments)
+            assignments_completed = sum(
+                1 for assignment in assignments if hasattr(assignment, 'review')
+            )
+            has_decision = hasattr(paper, 'final_decision')
+            is_evaluated = (
+                assignments_total > 0
+                and assignments_completed == assignments_total
+            )
+
+            total_assignments += assignments_total
+            completed_assignments += assignments_completed
+            status_counts[paper.status] = status_counts.get(paper.status, 0) + 1
+            if is_evaluated:
+                evaluated_papers += 1
+            if has_decision:
+                decided_papers += 1
+            if not has_decision and not is_evaluated:
+                pending_papers += 1
+
+            paper_details.append({
+                'paper': paper,
+                'assignments_total': assignments_total,
+                'assignments_completed': assignments_completed,
+                'assignments_pending': (
+                    assignments_total - assignments_completed
+                ),
+                'is_evaluated': is_evaluated,
+                'has_decision': has_decision,
+                'reviewers': [
+                    {
+                        'name': (
+                            assignment.reviewer.user.full_name
+                            or assignment.reviewer.user.email
+                        ),
+                        'completed': hasattr(assignment, 'review'),
+                    }
+                    for assignment in assignments
+                ],
+            })
+
+            axis = axes.get(paper.eixo_tematico_id)
+            if axis:
+                axis['total'] += 1
+                if paper.status == Paper.Status.SUBMITTED:
+                    axis['submitted'] += 1
+                if is_evaluated:
+                    axis['evaluated'] += 1
+                if not has_decision and not is_evaluated:
+                    axis['pending'] += 1
+
+        reviewers = (
+            Reviewer.objects.filter(event=event)
+            .select_related('user')
+            .prefetch_related('assignments__review')
+            .order_by('user__first_name', 'user__email')
+        )
+        reviewer_load = []
+        for reviewer in reviewers:
+            assignments = list(reviewer.assignments.all())
+            assigned = len(assignments)
+            completed = sum(
+                1 for assignment in assignments if hasattr(assignment, 'review')
+            )
+            reviewer_load.append({
+                'reviewer': reviewer,
+                'assigned': assigned,
+                'completed': completed,
+                'pending': assigned - completed,
+            })
+
+        return {
+            'total_papers': len(event_papers),
+            'submitted_papers': status_counts[Paper.Status.SUBMITTED],
+            'under_review_papers': status_counts[Paper.Status.UNDER_REVIEW],
+            'evaluated_papers': evaluated_papers,
+            'decided_papers': decided_papers,
+            'pending_papers': pending_papers,
+            'total_assignments': total_assignments,
+            'completed_assignments': completed_assignments,
+            'pending_assignments': total_assignments - completed_assignments,
+            'axes': list(axes.values()),
+            'reviewer_load': reviewer_load,
+            'papers': paper_details,
+        }
+
     def get(self, request: HttpRequest, pk: int):
         event = get_object_or_404(
             Event.objects.prefetch_related('eixos_tematicos'),
@@ -117,15 +237,20 @@ class EventDetailView(View):
             .order_by('-created_at')
         )
         eixos_tematicos = event.eixos_tematicos.order_by('name')
+        can_manage_event = user_can_manage_event(request.user, event)
+        can_decide_event = user_can_decide_event(request.user, event)
         context = {
             'event': event,
             'eixos_tematicos': eixos_tematicos,
             'papers': papers,
             'papers_total': papers.count(),
             'can_edit_event': event.owner_id == request.user.id,
-            'can_access_committee': (
-                user_can_manage_event(request.user, event)
-                or user_can_decide_event(request.user, event)
-            ),
+            'can_manage_event': can_manage_event,
+            'can_decide_event': can_decide_event,
+            'can_access_committee': can_manage_event or can_decide_event,
         }
+        if context['can_access_committee']:
+            context['management_dashboard'] = self.get_management_dashboard(
+                event
+            )
         return render(request, self.template_name, context)

@@ -17,31 +17,63 @@
                 <div class="card bg-base-100 border border-base-300">
                     <div class="card-body">
                         <h2 class="card-title">Membros da comissao</h2>
-                        <ul class="text-sm">
-                            <li>{{ event.owner }} · gestor e decisor (dono)</li>
+                        <p class="text-sm text-base-content/70">
+                            O dono do evento ja atua como gestor e decisor. Gestores
+                            organizam avaliadores e distribuicoes; decisores publicam
+                            o resultado final dos trabalhos.
+                        </p>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-base-300 p-3">
+                                <span>{{ event.owner }}</span>
+                                <span class="flex flex-wrap gap-2">
+                                    <span class="badge badge-primary badge-sm">gestor</span>
+                                    <span class="badge badge-secondary badge-sm">decisor</span>
+                                    <span class="badge badge-outline badge-sm">dono</span>
+                                </span>
+                            </li>
 
                             {% for member in members %}
-                                <li>
-                                    {{ member.user }} ·
+                                <li class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-base-300 p-3">
+                                    <div>
+                                        <p class="font-medium">{{ member.user.full_name|default:member.user.email }}</p>
+                                        <div class="mt-1 flex flex-wrap gap-2">
 
-                                    {% if member.is_manager %}gestor{% endif %}
+                                            {% if member.is_manager %}
+                                                <span class="badge badge-primary badge-sm">gestor</span>
+                                            {% endif %}
 
-                                    {% if member.is_manager and member.is_decider %}e{% endif %}
+                                            {% if member.is_decider %}
+                                                <span class="badge badge-secondary badge-sm">decisor</span>
+                                            {% endif %}
 
-                                    {% if member.is_decider %}decisor{% endif %}
+                                        </div>
+                                    </div>
+                                    <form method="post"
+                                          action="{% url 'committee_member_delete' event_pk=event.pk member_pk=member.pk %}"
+                                          onsubmit="return confirm('Remover este membro da comissao?');">
+                                        {% csrf_token %}
+                                        <button class="btn btn-ghost btn-xs text-error gap-1">
+                                            <i class="ph ph-trash text-base" aria-hidden="true"></i>
+                                            Remover
+                                        </button>
+                                    </form>
                                 </li>
 
                             {% endfor %}
                         </ul>
                         <form method="post"
-                              action="{% url 'committee_member_create' event_pk=event.pk %}">
+                              action="{% url 'committee_member_create' event_pk=event.pk %}"
+                              class="space-y-2">
                             {% csrf_token %}
 
                             {% for field in member_form %}
                                 <c-django-form.field :field="field" />
 
                             {% endfor %}
-                            <button class="btn btn-primary btn-sm">Adicionar membro</button>
+                            <button class="btn btn-primary btn-sm gap-2">
+                                <i class="ph ph-user-plus text-base" aria-hidden="true"></i>
+                                Adicionar membro
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -49,23 +81,57 @@
                 <div class="card bg-base-100 border border-base-300">
                     <div class="card-body">
                         <h2 class="card-title">Avaliadores</h2>
-                        <ul class="text-sm">
+                        <p class="text-sm text-base-content/70">
+                            Avaliadores recebem trabalhos por eixo tematico. A remocao
+                            so fica disponivel enquanto nao houver parecer enviado.
+                        </p>
+                        <ul class="space-y-3 text-sm">
 
                             {% for reviewer in reviewers %}
-                                <li>{{ reviewer.user.full_name|default:reviewer.user.email }}</li>
+                                <li class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-base-300 p-3">
+                                    <div>
+                                        <p class="font-medium">{{ reviewer.user.full_name|default:reviewer.user.email }}</p>
+                                        <div class="mt-1 flex flex-wrap gap-1">
+
+                                            {% for eixo in reviewer.eixos_tematicos.all %}
+
+                                                <span class="badge badge-outline badge-sm">{{ eixo.name }}</span>
+
+                                            {% empty %}
+
+                                                <span class="badge badge-ghost badge-sm">todos os eixos</span>
+
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <form method="post"
+                                          action="{% url 'reviewer_delete' event_pk=event.pk reviewer_pk=reviewer.pk %}"
+                                          onsubmit="return confirm('Remover este avaliador e suas atribuicoes pendentes?');">
+                                        {% csrf_token %}
+                                        <button class="btn btn-ghost btn-xs text-error gap-1">
+                                            <i class="ph ph-trash text-base" aria-hidden="true"></i>
+                                            Remover
+                                        </button>
+                                    </form>
+                                </li>
                             {% empty %}
                                 <li>Nenhum avaliador cadastrado.</li>
 
                             {% endfor %}
                         </ul>
-                        <form method="post" action="{% url 'reviewer_create' event_pk=event.pk %}">
+                        <form method="post"
+                              action="{% url 'reviewer_create' event_pk=event.pk %}"
+                              class="space-y-2">
                             {% csrf_token %}
 
                             {% for field in reviewer_form %}
                                 <c-django-form.field :field="field" />
 
                             {% endfor %}
-                            <button class="btn btn-primary btn-sm">Adicionar avaliador</button>
+                            <button class="btn btn-primary btn-sm gap-2">
+                                <i class="ph ph-user-plus text-base" aria-hidden="true"></i>
+                                Adicionar avaliador
+                            </button>
                         </form>
                     </div>
                 </div>

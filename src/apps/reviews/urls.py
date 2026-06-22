@@ -24,14 +24,29 @@ urlpatterns = [
         name='committee_member_create',
     ),
     path(
+        'eventos/<int:event_pk>/comissao/membros/<int:member_pk>/remover/',
+        views.CommitteeMemberDeleteView.as_view(),
+        name='committee_member_delete',
+    ),
+    path(
         'eventos/<int:event_pk>/comissao/avaliadores/',
         views.ReviewerCreateView.as_view(),
         name='reviewer_create',
     ),
     path(
+        'eventos/<int:event_pk>/comissao/avaliadores/<int:reviewer_pk>/remover/',
+        views.ReviewerDeleteView.as_view(),
+        name='reviewer_delete',
+    ),
+    path(
         'trabalhos/<int:paper_pk>/avaliadores/',
         views.PaperAssignmentManageView.as_view(),
         name='paper_assignment_manage',
+    ),
+    path(
+        'atribuicoes/<int:assignment_pk>/remover/',
+        views.ReviewAssignmentDeleteView.as_view(),
+        name='review_assignment_delete',
     ),
     path(
         'trabalhos/<int:paper_pk>/decisao/',

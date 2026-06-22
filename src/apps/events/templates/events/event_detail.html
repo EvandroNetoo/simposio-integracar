@@ -41,6 +41,265 @@
             </div>
         </div>
 
+        {% if can_access_committee and management_dashboard %}
+
+            <div class="space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <h2 class="text-lg font-semibold">Dashboard do evento</h2>
+                        <p class="text-sm text-base-content/70">
+                            Visao geral das submissoes, avaliacoes e decisoes.
+                        </p>
+                    </div>
+                    <a href="{% url 'committee_dashboard' event_pk=event.pk %}"
+                       class="btn btn-secondary btn-sm gap-2">
+                        <i class="ph ph-users-three text-lg" aria-hidden="true"></i>
+                        Gerenciar comissao
+                    </a>
+                </div>
+
+                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-4">
+                        <p class="text-xs text-base-content/60">Trabalhos</p>
+                        <p class="text-2xl font-bold">{{ management_dashboard.total_papers }}</p>
+                    </div>
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-4">
+                        <p class="text-xs text-base-content/60">Submetidos</p>
+                        <p class="text-2xl font-bold">{{ management_dashboard.submitted_papers }}</p>
+                    </div>
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-4">
+                        <p class="text-xs text-base-content/60">Em avaliacao</p>
+                        <p class="text-2xl font-bold">{{ management_dashboard.under_review_papers }}</p>
+                    </div>
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-4">
+                        <p class="text-xs text-base-content/60">Avaliados</p>
+                        <p class="text-2xl font-bold">{{ management_dashboard.evaluated_papers }}</p>
+                    </div>
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-4">
+                        <p class="text-xs text-base-content/60">Com decisao</p>
+                        <p class="text-2xl font-bold">{{ management_dashboard.decided_papers }}</p>
+                    </div>
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-4">
+                        <p class="text-xs text-base-content/60">Faltam avaliar</p>
+                        <p class="text-2xl font-bold">{{ management_dashboard.pending_papers }}</p>
+                    </div>
+                </div>
+
+                <div class="grid gap-4 lg:grid-cols-3">
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-4">
+                        <h3 class="font-semibold">Pareceres</h3>
+                        <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
+                            <div>
+                                <p class="text-base-content/60">Atribuidos</p>
+                                <p class="text-xl font-bold">{{ management_dashboard.total_assignments }}</p>
+                            </div>
+                            <div>
+                                <p class="text-base-content/60">Enviados</p>
+                                <p class="text-xl font-bold">{{ management_dashboard.completed_assignments }}</p>
+                            </div>
+                            <div>
+                                <p class="text-base-content/60">Pendentes</p>
+                                <p class="text-xl font-bold">{{ management_dashboard.pending_assignments }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-4 lg:col-span-2">
+                        <h3 class="font-semibold">Trabalhos por eixo tematico</h3>
+                        <div class="mt-3 overflow-x-auto">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Eixo</th>
+                                        <th>Total</th>
+                                        <th>Submetidos</th>
+                                        <th>Avaliados</th>
+                                        <th>Pendentes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                    {% for axis in management_dashboard.axes %}
+
+                                        <tr>
+                                            <td>{{ axis.name }}</td>
+                                            <td>{{ axis.total }}</td>
+                                            <td>{{ axis.submitted }}</td>
+                                            <td>{{ axis.evaluated }}</td>
+                                            <td>{{ axis.pending }}</td>
+                                        </tr>
+
+                                    {% empty %}
+
+                                        <tr>
+                                            <td colspan="5">Nenhum eixo tematico cadastrado.</td>
+                                        </tr>
+
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-lg border border-base-300 bg-base-100 p-4">
+                    <h3 class="font-semibold">Carga dos avaliadores</h3>
+                    <div class="mt-3 overflow-x-auto">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Avaliador</th>
+                                    <th>Atribuidos</th>
+                                    <th>Avaliados</th>
+                                    <th>Faltam</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                {% for item in management_dashboard.reviewer_load %}
+
+                                    <tr>
+                                        <td>{{ item.reviewer.user.full_name|default:item.reviewer.user.email }}</td>
+                                        <td>{{ item.assigned }}</td>
+                                        <td>{{ item.completed }}</td>
+                                        <td>{{ item.pending }}</td>
+                                    </tr>
+
+                                {% empty %}
+
+                                    <tr>
+                                        <td colspan="4">Nenhum avaliador cadastrado.</td>
+                                    </tr>
+
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="rounded-lg border border-base-300 bg-base-100 p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <h3 class="font-semibold">Trabalhos individuais</h3>
+                            <p class="text-sm text-base-content/70">
+                                Acompanhamento de cada submissao do evento.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-3 overflow-x-auto">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Trabalho</th>
+                                    <th>Eixo</th>
+                                    <th>Status</th>
+                                    <th>Pareceres</th>
+                                    <th>Avaliadores</th>
+                                    <th>Decisao</th>
+                                    <th>Acoes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                {% for item in management_dashboard.papers %}
+
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'paper_detail' pk=item.paper.pk %}"
+                                               class="link font-medium">
+                                                {{ item.paper.title }}
+                                            </a>
+                                        </td>
+                                        <td>{{ item.paper.eixo_tematico.name }}</td>
+                                        <td>
+                                            <span class="badge badge-ghost badge-sm">
+                                                {{ item.paper.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="font-medium">
+                                                {{ item.assignments_completed }}/{{ item.assignments_total }}
+                                            </span>
+
+                                            {% if item.assignments_pending %}
+
+                                                <span class="text-xs text-base-content/60">
+                                                    · {{ item.assignments_pending }} pendente{{ item.assignments_pending|pluralize }}
+                                                </span>
+
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="flex flex-wrap gap-1">
+
+                                                {% for reviewer in item.reviewers %}
+
+                                                    <span class="badge {% if reviewer.completed %}badge-success{% else %}badge-warning{% endif %} badge-sm">
+                                                        {{ reviewer.name }}
+                                                    </span>
+
+                                                {% empty %}
+
+                                                    <span class="text-xs text-base-content/60">
+                                                        Sem avaliadores
+                                                    </span>
+
+                                                {% endfor %}
+                                            </div>
+                                        </td>
+                                        <td>
+
+                                            {% if item.has_decision %}
+
+                                                <span class="badge badge-outline badge-sm">
+                                                    {{ item.paper.final_decision.get_result_display }}
+                                                </span>
+
+                                            {% else %}
+
+                                                <span class="text-xs text-base-content/60">Sem decisao</span>
+
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="flex flex-wrap gap-2">
+
+                                                {% if can_manage_event %}
+
+                                                    <a class="btn btn-ghost btn-xs"
+                                                       href="{% url 'paper_assignment_manage' paper_pk=item.paper.pk %}">
+                                                        Avaliadores
+                                                    </a>
+
+                                                {% endif %}
+
+                                                {% if can_decide_event and not item.has_decision %}
+
+                                                    <a class="btn btn-ghost btn-xs"
+                                                       href="{% url 'final_decision_create' paper_pk=item.paper.pk %}">
+                                                        Decisao
+                                                    </a>
+
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                {% empty %}
+
+                                    <tr>
+                                        <td colspan="7">Nenhum trabalho cadastrado.</td>
+                                    </tr>
+
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        {% endif %}
+
         <div class="bg-base-100 border border-base-300 rounded-lg p-6 shadow-sm space-y-4">
             <div class="grid gap-4 md:grid-cols-3 text-sm">
                 <div class="space-y-1">

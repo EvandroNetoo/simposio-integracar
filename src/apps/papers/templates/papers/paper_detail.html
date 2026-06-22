@@ -215,9 +215,14 @@
         </div>
 
         <div class="bg-base-100 border border-base-300 rounded-lg p-6 shadow-sm space-y-4">
-            <h2 class="text-base font-semibold">Pareceres</h2>
+            <div>
+                <h2 class="text-base font-semibold">Pareceres</h2>
+                <p class="text-sm text-base-content/60">
+                    Retorno publicado pela comissao avaliadora.
+                </p>
+            </div>
 
-            {% if assignments %}
+            {% if published_reviews_count %}
 
                 <ul class="space-y-2">
 
@@ -256,11 +261,29 @@
                     {% endfor %}
                 </ul>
 
+            {% elif assignments %}
+
+                <div role="alert" class="alert alert-warning alert-soft text-sm">
+                    <i class="ph ph-clock text-lg" aria-hidden="true"></i>
+                    <div>
+                        <p class="font-medium">Pareceres ainda nao publicados.</p>
+                        <p class="text-xs text-base-content/60">
+                            O trabalho ja esta em avaliacao, mas nenhum avaliador enviou parecer ate o momento.
+                        </p>
+                    </div>
+                </div>
+
             {% else %}
 
-                <p class="text-xs text-base-content/60">
-                    Nenhum parecer enviado para este trabalho.
-                </p>
+                <div role="alert" class="alert alert-info alert-soft text-sm">
+                    <i class="ph ph-info text-lg" aria-hidden="true"></i>
+                    <div>
+                        <p class="font-medium">Nenhum avaliador atribuido.</p>
+                        <p class="text-xs text-base-content/60">
+                            Quando a avaliacao for publicada, o retorno aparecera aqui.
+                        </p>
+                    </div>
+                </div>
 
             {% endif %}
 
