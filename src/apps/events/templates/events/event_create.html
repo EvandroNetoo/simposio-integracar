@@ -24,7 +24,7 @@
             {% endif %}
         </div>
 
-        <div class="card bg-base-100 border border-base-300 shadow-sm overflow-hidden">
+        <div class="gov-surface overflow-hidden">
 
             <div class="card-body">
 
@@ -98,7 +98,7 @@
 
                             {% for eixo_form in eixo_formset %}
 
-                                <div class="card card-sm bg-base-100 border border-base-300" data-eixo-row>
+                                <div class="gov-surface" data-eixo-row>
                                     <div class="card-body gap-3 p-4">
                                         <div class="flex flex-wrap items-center justify-between gap-3">
                                             <span class="badge badge-primary badge-sm" data-eixo-title>
@@ -140,7 +140,7 @@
 
                             {% with eixo_form=eixo_formset.empty_form %}
 
-                                <div class="card card-sm bg-base-100 border border-base-300" data-eixo-row>
+                                <div class="gov-surface" data-eixo-row>
                                     <div class="card-body gap-3 p-4">
                                         <div class="flex flex-wrap items-center justify-between gap-3">
                                             <span class="badge badge-primary badge-sm" data-eixo-title>Eixo</span>
@@ -167,7 +167,8 @@
                     </div>
 
                     <div class="card-actions justify-end">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary gap-2">
+                            <i class="ph ph-check text-lg" aria-hidden="true"></i>
                             {{ submit_label|default:"Criar Evento" }}
                         </button>
                     </div>

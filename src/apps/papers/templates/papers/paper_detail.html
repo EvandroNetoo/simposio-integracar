@@ -30,19 +30,19 @@
             </div>
         </div>
 
-        <div class="bg-base-100 border border-base-300 rounded-lg p-6 shadow-sm space-y-4">
-            <div class="grid gap-4 md:grid-cols-2 text-sm">
-                <div class="space-y-1">
-                    <p class="text-base-content/70">Autor principal</p>
-                    <p class="font-medium">{{ paper.user.full_name|default:paper.user.email }}</p>
+        <div class="gov-surface gov-surface-body space-y-4">
+            <div class="gov-meta-grid md:grid-cols-3 text-sm">
+                <div class="gov-meta-item">
+                    <p class="gov-meta-label">Autor principal</p>
+                    <p class="gov-meta-value">{{ paper.user.full_name|default:paper.user.email }}</p>
                 </div>
-                <div class="space-y-1">
-                    <p class="text-base-content/70">Eixo tematico</p>
-                    <p class="font-medium">{{ paper.eixo_tematico.name }}</p>
+                <div class="gov-meta-item">
+                    <p class="gov-meta-label">Eixo tematico</p>
+                    <p class="gov-meta-value">{{ paper.eixo_tematico.name }}</p>
                 </div>
-                <div class="space-y-1">
-                    <p class="text-base-content/70">Enviado em</p>
-                    <p class="font-medium">{{ paper.created_at|date:"d/m/Y H:i" }}</p>
+                <div class="gov-meta-item">
+                    <p class="gov-meta-label">Enviado em</p>
+                    <p class="gov-meta-value">{{ paper.created_at|date:"d/m/Y H:i" }}</p>
                 </div>
             </div>
 
@@ -132,7 +132,7 @@
             </div>
         </div>
 
-        <div class="bg-base-100 border border-base-300 rounded-lg p-6 shadow-sm space-y-4">
+        <div class="gov-surface gov-surface-body space-y-4">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h2 class="text-base font-semibold">Submissoes</h2>
@@ -180,9 +180,10 @@
                                 <div class="space-y-3">
                                     <div class="space-y-1">
                                         <p class="text-base-content/70">Arquivo</p>
-                                        <a class="link link-primary break-all"
+                                        <a class="btn btn-ghost btn-sm gap-2 w-fit"
                                            href="{% url 'submission_download' pk=item.submission.pk %}"
                                            target="_blank">
+                                            <i class="ph ph-file-pdf text-lg" aria-hidden="true"></i>
                                             Visualizar arquivo enviado
                                         </a>
                                     </div>
@@ -214,7 +215,7 @@
             </ul>
         </div>
 
-        <div class="bg-base-100 border border-base-300 rounded-lg p-6 shadow-sm space-y-4">
+        <div class="gov-surface gov-surface-body space-y-4">
             <div>
                 <h2 class="text-base font-semibold">Pareceres</h2>
                 <p class="text-sm text-base-content/60">
@@ -230,25 +231,27 @@
 
                         {% if assignment.review %}
 
-                            <li class="rounded-lg border border-base-300 bg-base-100 p-3 space-y-2">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <p class="text-sm font-medium">
+                            <li class="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
+                                <div class="flex flex-wrap items-start justify-between gap-3">
+                                    <div>
+                                        <p class="text-sm font-medium">
 
-                                        {% if event.blind_review %}
+                                            {% if event.blind_review %}
 
-                                            Avaliador anonimo
+                                                Avaliador anonimo
 
-                                        {% else %}
+                                            {% else %}
 
-                                            {{ assignment.reviewer.user.full_name|default:assignment.reviewer.user.email }}
+                                                {{ assignment.reviewer.user.full_name|default:assignment.reviewer.user.email }}
 
-                                        {% endif %}
-                                    </p>
+                                            {% endif %}
+                                        </p>
+                                        <p class="text-xs text-base-content/60">
+                                            {{ assignment.review.updated_at|date:"d/m/Y H:i" }}
+                                        </p>
+                                    </div>
                                     <span class="badge badge-outline badge-sm">
                                         {{ assignment.review.get_recommendation_display }}
-                                    </span>
-                                    <span class="text-xs text-base-content/60">
-                                        {{ assignment.review.updated_at|date:"d/m/Y H:i" }}
                                     </span>
                                 </div>
                                 <p class="text-sm text-base-content/70 whitespace-pre-line">

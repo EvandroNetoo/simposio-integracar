@@ -12,48 +12,60 @@
             </div>
         </div>
 
-        <div class="grid gap-4">
+        <div class="gov-surface">
+            <div class="card-body">
 
-            {% for assignment in assignments %}
-                <a href="{% url 'review_detail' pk=assignment.pk %}"
-                   class="card bg-base-100 border border-base-300 shadow-sm hover:border-primary/40">
-                    <div class="card-body gap-2">
-                        <div class="flex flex-wrap justify-between gap-2">
-                            <h2 class="card-title text-base">
+                {% if assignments %}
 
-                                {% if assignment.paper.event.blind_review %}
+                    <div class="divide-y divide-base-300 rounded-lg border border-base-300">
 
-                                    Trabalho #{{ assignment.paper.pk }}
+                        {% for assignment in assignments %}
 
-                                {% else %}
+                            <a href="{% url 'review_detail' pk=assignment.pk %}"
+                               class="block p-4 transition hover:bg-base-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                <div class="flex flex-wrap items-start justify-between gap-3">
+                                    <div class="min-w-0 space-y-1">
+                                        <h2 class="text-base font-semibold">
 
-                                    {{ assignment.paper.title }}
+                                            {% if assignment.paper.event.blind_review %}
 
-                                {% endif %}
-                            </h2>
+                                                Trabalho #{{ assignment.paper.pk }}
 
-                            {% if assignment.review %}
+                                            {% else %}
 
-                                <span class="badge badge-success">Parecer enviado</span>
+                                                {{ assignment.paper.title }}
 
-                            {% else %}
+                                            {% endif %}
+                                        </h2>
+                                        <p class="text-sm text-base-content/70">
+                                            {{ assignment.paper.event }}
+                                        </p>
+                                        <p class="text-xs text-base-content/60">
+                                            Prazo: {{ assignment.paper.event.evaluation_period_end|date:"d/m/Y H:i" }}
+                                        </p>
+                                    </div>
 
-                                <span class="badge badge-warning">Pendente</span>
+                                    {% if assignment.review %}
 
-                            {% endif %}
-                        </div>
-                        <p class="text-sm text-base-content/70">
-                            {{ assignment.paper.event }}
-                        </p>
-                        <p class="text-xs text-base-content/60">
-                            Prazo: {{ assignment.paper.event.evaluation_period_end|date:"d/m/Y H:i" }}
-                        </p>
+                                        <span class="badge badge-success">Parecer enviado</span>
+
+                                    {% else %}
+
+                                        <span class="badge badge-warning">Pendente</span>
+
+                                    {% endif %}
+                                </div>
+                            </a>
+
+                        {% endfor %}
                     </div>
-                </a>
-            {% empty %}
-                <div class="alert alert-info">Nenhum trabalho atribuido.</div>
 
-            {% endfor %}
+                {% else %}
+
+                    <div class="alert alert-info">Nenhum trabalho atribuido.</div>
+
+                {% endif %}
+            </div>
         </div>
     </section>
 

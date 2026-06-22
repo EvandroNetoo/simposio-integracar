@@ -14,16 +14,18 @@
         {% if can_manage %}
 
             <div class="grid gap-4 lg:grid-cols-2">
-                <div class="card bg-base-100 border border-base-300">
+                <div class="gov-surface">
                     <div class="card-body">
-                        <h2 class="card-title">Membros da comissao</h2>
-                        <p class="text-sm text-base-content/70">
-                            O dono do evento ja atua como gestor e decisor. Gestores
-                            organizam avaliadores e distribuicoes; decisores publicam
-                            o resultado final dos trabalhos.
-                        </p>
-                        <ul class="space-y-3 text-sm">
-                            <li class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-base-300 p-3">
+                        <div>
+                            <h2 class="card-title">Membros da comissao</h2>
+                            <p class="text-sm text-base-content/70">
+                                O dono do evento ja atua como gestor e decisor. Gestores
+                                organizam avaliadores e distribuicoes; decisores publicam
+                                o resultado final dos trabalhos.
+                            </p>
+                        </div>
+                        <ul class="divide-y divide-base-300 rounded-lg border border-base-300 text-sm">
+                            <li class="flex flex-wrap items-center justify-between gap-2 p-3">
                                 <span>{{ event.owner }}</span>
                                 <span class="flex flex-wrap gap-2">
                                     <span class="badge badge-primary badge-sm">gestor</span>
@@ -33,7 +35,7 @@
                             </li>
 
                             {% for member in members %}
-                                <li class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-base-300 p-3">
+                                <li class="flex flex-wrap items-center justify-between gap-2 p-3">
                                     <div>
                                         <p class="font-medium">{{ member.user.full_name|default:member.user.email }}</p>
                                         <div class="mt-1 flex flex-wrap gap-2">
@@ -78,17 +80,19 @@
                     </div>
                 </div>
 
-                <div class="card bg-base-100 border border-base-300">
+                <div class="gov-surface">
                     <div class="card-body">
-                        <h2 class="card-title">Avaliadores</h2>
-                        <p class="text-sm text-base-content/70">
-                            Avaliadores recebem trabalhos por eixo tematico. A remocao
-                            so fica disponivel enquanto nao houver parecer enviado.
-                        </p>
-                        <ul class="space-y-3 text-sm">
+                        <div>
+                            <h2 class="card-title">Avaliadores</h2>
+                            <p class="text-sm text-base-content/70">
+                                Avaliadores recebem trabalhos por eixo tematico. A remocao
+                                so fica disponivel enquanto nao houver parecer enviado.
+                            </p>
+                        </div>
+                        <ul class="divide-y divide-base-300 rounded-lg border border-base-300 text-sm">
 
                             {% for reviewer in reviewers %}
-                                <li class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-base-300 p-3">
+                                <li class="flex flex-wrap items-center justify-between gap-2 p-3">
                                     <div>
                                         <p class="font-medium">{{ reviewer.user.full_name|default:reviewer.user.email }}</p>
                                         <div class="mt-1 flex flex-wrap gap-1">
@@ -139,23 +143,25 @@
 
         {% endif %}
 
-        <div class="card bg-base-100 border border-base-300">
+        <div class="gov-surface">
             <div class="card-body">
                 <h2 class="card-title">Trabalhos e avaliadores</h2>
 
+                <div class="divide-y divide-base-300 rounded-lg border border-base-300">
                 {% for paper in papers %}
-                    <div class="border-t border-base-300 py-3">
-                        <div class="flex flex-wrap justify-between gap-2">
+                    <div class="p-3">
+                        <div class="flex flex-wrap justify-between gap-3">
                             <div>
                                 <p class="font-semibold">{{ paper.title }}</p>
-                                <p class="text-xs">{{ paper.get_status_display }}</p>
+                                <p class="text-xs text-base-content/60">{{ paper.get_status_display }}</p>
                             </div>
                             <div class="flex flex-wrap gap-2">
 
                                 {% if can_manage %}
 
-                                    <a class="link"
+                                    <a class="btn btn-ghost btn-xs gap-1"
                                        href="{% url 'paper_assignment_manage' paper_pk=paper.pk %}">
+                                        <i class="ph ph-users-three text-base" aria-hidden="true"></i>
                                         Gerenciar avaliadores
                                     </a>
 
@@ -163,8 +169,9 @@
 
                                 {% if can_decide and not paper.final_decision %}
 
-                                    <a class="link"
+                                    <a class="btn btn-ghost btn-xs gap-1"
                                        href="{% url 'final_decision_create' paper_pk=paper.pk %}">
+                                        <i class="ph ph-seal-check text-base" aria-hidden="true"></i>
                                         Publicar decisao
                                     </a>
 
@@ -184,9 +191,10 @@
                         </div>
                     </div>
                 {% empty %}
-                    <p>Nenhum trabalho cadastrado.</p>
+                    <p class="p-3 text-sm text-base-content/60">Nenhum trabalho cadastrado.</p>
 
                 {% endfor %}
+                </div>
             </div>
         </div>
     </section>

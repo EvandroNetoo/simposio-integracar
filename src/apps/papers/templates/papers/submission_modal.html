@@ -2,12 +2,18 @@
 
 <c-modal title="Anexar resumo em PDF" id="submission-modal">
     <c-htmx-form url="{% url 'submission_create' pk=paper.pk %}" target="#submission-form" enctype="multipart/form-data" hx-encoding="multipart/form-data" class="space-y-4">
+        <p class="text-sm text-base-content/70">
+            Envie a versao em PDF do trabalho. O arquivo sera anexado ao historico de submissoes.
+        </p>
         <div id="submission-form" class="space-y-4">
             <c-django-form :form="form" />
         </div>
 
         <div class="modal-action">
-            <button type="submit" class="btn btn-primary">Enviar PDF</button>
+            <button type="submit" class="btn btn-primary gap-2">
+                <i class="ph ph-upload-simple text-lg" aria-hidden="true"></i>
+                Enviar PDF
+            </button>
         </div>
     </c-htmx-form>
 </c-modal>

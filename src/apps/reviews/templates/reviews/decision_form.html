@@ -12,20 +12,25 @@
                href="{% url 'committee_dashboard' event_pk=paper.event_id %}">Voltar</a>
         </div>
 
-        <div class="card bg-base-100 border border-base-300">
+        <div class="gov-surface">
             <div class="card-body space-y-4">
                 <div class="space-y-3">
                     <h2 class="card-title">Pareceres enviados</h2>
 
+                    <div class="divide-y divide-base-300 rounded-lg border border-base-300">
                     {% for assignment in paper.review_assignments.all %}
 
                         {% if assignment.review %}
 
-                            <div class="rounded border border-base-300 p-3 text-sm">
-                                <p class="font-semibold">
-                                    {{ assignment.reviewer.user.full_name|default:assignment.reviewer.user.email }}
-                                    · {{ assignment.review.get_recommendation_display }}
-                                </p>
+                            <div class="p-3 text-sm">
+                                <div class="flex flex-wrap items-start justify-between gap-2">
+                                    <p class="font-semibold">
+                                        {{ assignment.reviewer.user.full_name|default:assignment.reviewer.user.email }}
+                                    </p>
+                                    <span class="badge badge-outline badge-sm">
+                                        {{ assignment.review.get_recommendation_display }}
+                                    </span>
+                                </div>
                                 <p class="whitespace-pre-line">
                                     {{ assignment.review.comments_to_author }}
                                 </p>
@@ -34,11 +39,21 @@
                         {% endif %}
 
                     {% endfor %}
+                    </div>
                 </div>
-                <form method="post" class="space-y-4">
+                <form method="post" class="space-y-4 rounded-lg border border-base-300 p-4">
                     {% csrf_token %}
+                    <div>
+                        <h2 class="text-base font-semibold">Publicar resultado</h2>
+                        <p class="text-sm text-base-content/70">
+                            A decisao sera exibida ao autor e enviada por email.
+                        </p>
+                    </div>
                     <c-django-form />
-                    <button class="btn btn-primary">Publicar decisao</button>
+                    <button class="btn btn-primary gap-2">
+                        <i class="ph ph-seal-check text-lg" aria-hidden="true"></i>
+                        Publicar decisao
+                    </button>
                 </form>
             </div>
         </div>

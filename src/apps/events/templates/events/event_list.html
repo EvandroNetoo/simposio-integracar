@@ -13,7 +13,10 @@
 
                 {% if user.is_staff %}
 
-                    <a href="{% url 'event_create' %}" class="btn btn-primary">Adicionar Evento</a>
+                    <a href="{% url 'event_create' %}" class="btn btn-primary gap-2">
+                        <i class="ph ph-plus text-lg" aria-hidden="true"></i>
+                        Adicionar Evento
+                    </a>
 
                 {% endif %}
 
@@ -22,24 +25,29 @@
 
         {% if events %}
 
-            <div class="space-y-4">
+            <div class="grid gap-4">
 
                 {% for event in events %}
                     <a href="{% url 'event_detail' event.pk %}"
-                       class="block w-full border border-base-300 rounded-lg p-4 bg-base-100 shadow-sm transition hover:bg-base-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                       class="card bg-base-100 border border-base-300 transition hover:border-primary/40 hover:shadow-md"
                        aria-label="Ver detalhes do evento {{ event.name }}">
-                        <div class="flex flex-col gap-3">
-                            <div class="flex flex-col gap-1">
-                                <h2 class="text-base font-semibold">{{ event.name }}</h2>
-                                <p class="text-sm text-base-content/70">
-                                    Edicao {{ event.edition }} · {{ event.year }}
-                                </p>
+                        <div class="card-body">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <h2 class="text-base font-semibold">{{ event.name }}</h2>
+                                    <p class="text-sm text-base-content/70">
+                                        Edicao {{ event.edition }} · {{ event.year }}
+                                    </p>
+                                </div>
+                                <span class="badge badge-outline badge-sm">
+                                    {{ event.organizing_institution }}
+                                </span>
                             </div>
 
                             <div class="divider my-0"></div>
 
-                            <div class="grid gap-2 text-sm md:grid-cols-3">
-                                <div class="flex items-center md:justify-start gap-2">
+                            <div class="grid gap-3 text-sm md:grid-cols-3">
+                                <div class="space-y-1">
                                     <span class="text-base-content/70">Submissao</span>
                                     <span class="font-medium">
                                         {{ event.submission_period_start|date:"d/m/Y H:i" }}
@@ -47,7 +55,7 @@
                                         {{ event.submission_period_end|date:"d/m/Y H:i" }}
                                     </span>
                                 </div>
-                                <div class="flex items-center md:justify-center gap-2">
+                                <div class="space-y-1">
                                     <span class="text-base-content/70">Avaliacao</span>
                                     <span class="font-medium">
                                         {{ event.evaluation_period_start|date:"d/m/Y H:i" }}
@@ -55,7 +63,7 @@
                                         {{ event.evaluation_period_end|date:"d/m/Y H:i" }}
                                     </span>
                                 </div>
-                                <div class="flex items-center md:justify-end gap-2">
+                                <div class="space-y-1">
                                     <span class="text-base-content/70">Resultados</span>
                                     <span class="font-medium">
                                         {{ event.results_publication_date|date:"d/m/Y H:i" }}
@@ -65,9 +73,12 @@
 
                             <div class="divider my-0"></div>
 
-                            <div class="grid gap-2 text-sm md:grid-cols-2">
-                                <p class="font-medium">{{ event.organizing_institution }}</p>
-                                <p class="text-base-content/70 md:text-right">{{ event.contact_email }}</p>
+                            <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
+                                <span class="text-base-content/70">{{ event.contact_email }}</span>
+                                <span class="btn btn-ghost btn-xs gap-1">
+                                    Abrir
+                                    <i class="ph ph-arrow-right text-base" aria-hidden="true"></i>
+                                </span>
                             </div>
                         </div>
                     </a>

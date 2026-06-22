@@ -16,7 +16,7 @@
             </div>
         </div>
 
-        <div class="card bg-base-100 border border-base-300 shadow-sm">
+        <div class="gov-surface">
             <div class="card-body gap-4">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <div>
@@ -30,31 +30,30 @@
 
                 {% if papers %}
 
-                    <ul class="space-y-3">
+                    <ul class="divide-y divide-base-300 rounded-lg border border-base-300 bg-base-100">
 
                         {% for paper in papers %}
 
                             <li>
                                 <a href="{% url 'paper_detail' pk=paper.pk %}"
-                                   class="card card-sm bg-base-100 border border-base-300 transition hover:border-primary/40 hover:shadow-md">
-                                    <div class="card-body gap-3">
-                                        <div class="flex flex-wrap items-center justify-between gap-2">
-                                            <h2 class="card-title text-base">{{ paper.title }}</h2>
+                                   class="block p-4 transition hover:bg-base-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                    <div class="flex flex-wrap items-start justify-between gap-3">
+                                        <div class="min-w-0 space-y-1">
+                                            <h2 class="text-base font-semibold">{{ paper.title }}</h2>
+                                            <p class="text-xs text-base-content/60">
+                                                {{ paper.event.name }} · Edicao {{ paper.event.edition }} · {{ paper.event.year }}
+                                            </p>
+                                            <p class="text-xs text-base-content/60">
+                                                Eixo temático: {{ paper.eixo_tematico.name }}
+                                            </p>
+                                            <p class="text-sm text-base-content/70">
+                                                {{ paper.abstract|truncatewords:28 }}
+                                            </p>
+                                        </div>
+                                        <div class="flex flex-col items-start gap-2 sm:items-end">
                                             <span class="badge badge-ghost badge-sm">
                                                 {{ paper.created_at|date:"d/m/Y" }}
                                             </span>
-                                        </div>
-                                        <p class="text-xs text-base-content/60">
-                                            {{ paper.event.name }} · Edicao {{ paper.event.edition }} · {{ paper.event.year }}
-                                        </p>
-                                        <p class="text-xs text-base-content/60">
-                                            Eixo temático: {{ paper.eixo_tematico.name }}
-                                        </p>
-                                        <p class="text-sm text-base-content/70">
-                                            {{ paper.abstract|truncatewords:28 }}
-                                        </p>
-
-                                        <div class="flex flex-wrap items-center justify-between gap-3">
                                             <span class="text-xs text-base-content/60">
                                                 {{ paper.coauthors.all|length }} coautores
                                             </span>

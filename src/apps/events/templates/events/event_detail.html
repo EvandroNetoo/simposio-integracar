@@ -59,52 +59,52 @@
                 </div>
 
                 <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-                    <div class="rounded-lg border border-base-300 bg-base-100 p-4">
-                        <p class="text-xs text-base-content/60">Trabalhos</p>
-                        <p class="text-2xl font-bold">{{ management_dashboard.total_papers }}</p>
+                    <div class="gov-stat-card">
+                        <p class="gov-stat-label">Trabalhos</p>
+                        <p class="gov-stat-value">{{ management_dashboard.total_papers }}</p>
                     </div>
-                    <div class="rounded-lg border border-base-300 bg-base-100 p-4">
-                        <p class="text-xs text-base-content/60">Submetidos</p>
-                        <p class="text-2xl font-bold">{{ management_dashboard.submitted_papers }}</p>
+                    <div class="gov-stat-card">
+                        <p class="gov-stat-label">Submetidos</p>
+                        <p class="gov-stat-value">{{ management_dashboard.submitted_papers }}</p>
                     </div>
-                    <div class="rounded-lg border border-base-300 bg-base-100 p-4">
-                        <p class="text-xs text-base-content/60">Em avaliacao</p>
-                        <p class="text-2xl font-bold">{{ management_dashboard.under_review_papers }}</p>
+                    <div class="gov-stat-card">
+                        <p class="gov-stat-label">Em avaliacao</p>
+                        <p class="gov-stat-value">{{ management_dashboard.under_review_papers }}</p>
                     </div>
-                    <div class="rounded-lg border border-base-300 bg-base-100 p-4">
-                        <p class="text-xs text-base-content/60">Avaliados</p>
-                        <p class="text-2xl font-bold">{{ management_dashboard.evaluated_papers }}</p>
+                    <div class="gov-stat-card">
+                        <p class="gov-stat-label">Avaliados</p>
+                        <p class="gov-stat-value">{{ management_dashboard.evaluated_papers }}</p>
                     </div>
-                    <div class="rounded-lg border border-base-300 bg-base-100 p-4">
-                        <p class="text-xs text-base-content/60">Com decisao</p>
-                        <p class="text-2xl font-bold">{{ management_dashboard.decided_papers }}</p>
+                    <div class="gov-stat-card">
+                        <p class="gov-stat-label">Com decisao</p>
+                        <p class="gov-stat-value">{{ management_dashboard.decided_papers }}</p>
                     </div>
-                    <div class="rounded-lg border border-base-300 bg-base-100 p-4">
-                        <p class="text-xs text-base-content/60">Faltam avaliar</p>
-                        <p class="text-2xl font-bold">{{ management_dashboard.pending_papers }}</p>
+                    <div class="gov-stat-card">
+                        <p class="gov-stat-label">Faltam avaliar</p>
+                        <p class="gov-stat-value">{{ management_dashboard.pending_papers }}</p>
                     </div>
                 </div>
 
                 <div class="grid gap-4 lg:grid-cols-3">
-                    <div class="rounded-lg border border-base-300 bg-base-100 p-4">
+                    <div class="gov-surface gov-surface-body">
                         <h3 class="font-semibold">Pareceres</h3>
                         <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
-                            <div>
-                                <p class="text-base-content/60">Atribuidos</p>
-                                <p class="text-xl font-bold">{{ management_dashboard.total_assignments }}</p>
+                            <div class="gov-meta-item">
+                                <p class="gov-meta-label">Atribuidos</p>
+                                <p class="gov-meta-value">{{ management_dashboard.total_assignments }}</p>
                             </div>
-                            <div>
-                                <p class="text-base-content/60">Enviados</p>
-                                <p class="text-xl font-bold">{{ management_dashboard.completed_assignments }}</p>
+                            <div class="gov-meta-item">
+                                <p class="gov-meta-label">Enviados</p>
+                                <p class="gov-meta-value">{{ management_dashboard.completed_assignments }}</p>
                             </div>
-                            <div>
-                                <p class="text-base-content/60">Pendentes</p>
-                                <p class="text-xl font-bold">{{ management_dashboard.pending_assignments }}</p>
+                            <div class="gov-meta-item">
+                                <p class="gov-meta-label">Pendentes</p>
+                                <p class="gov-meta-value">{{ management_dashboard.pending_assignments }}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="rounded-lg border border-base-300 bg-base-100 p-4 lg:col-span-2">
+                    <div class="gov-surface gov-surface-body lg:col-span-2">
                         <h3 class="font-semibold">Trabalhos por eixo tematico</h3>
                         <div class="mt-3 overflow-x-auto">
                             <table class="table table-sm">
@@ -142,7 +142,7 @@
                     </div>
                 </div>
 
-                <div class="rounded-lg border border-base-300 bg-base-100 p-4">
+                <div class="gov-surface gov-surface-body">
                     <h3 class="font-semibold">Carga dos avaliadores</h3>
                     <div class="mt-3 overflow-x-auto">
                         <table class="table table-sm">
@@ -177,7 +177,7 @@
                     </div>
                 </div>
 
-                <div class="rounded-lg border border-base-300 bg-base-100 p-4">
+                <div class="gov-surface gov-surface-body">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <div>
                             <h3 class="font-semibold">Trabalhos individuais</h3>
@@ -312,27 +312,27 @@
 
         {% endif %}
 
-        <div class="bg-base-100 border border-base-300 rounded-lg p-6 shadow-sm space-y-4">
-            <div class="grid gap-4 md:grid-cols-3 text-sm">
-                <div class="space-y-1">
-                    <p class="text-base-content/70">Submissao</p>
-                    <p class="font-medium">
+        <div class="gov-surface gov-surface-body space-y-4">
+            <div class="gov-meta-grid md:grid-cols-3 text-sm">
+                <div class="gov-meta-item">
+                    <p class="gov-meta-label">Submissao</p>
+                    <p class="gov-meta-value">
                         {{ event.submission_period_start|date:"d/m/Y H:i" }}
                         -
                         {{ event.submission_period_end|date:"d/m/Y H:i" }}
                     </p>
                 </div>
-                <div class="space-y-1">
-                    <p class="text-base-content/70">Avaliacao</p>
-                    <p class="font-medium">
+                <div class="gov-meta-item">
+                    <p class="gov-meta-label">Avaliacao</p>
+                    <p class="gov-meta-value">
                         {{ event.evaluation_period_start|date:"d/m/Y H:i" }}
                         -
                         {{ event.evaluation_period_end|date:"d/m/Y H:i" }}
                     </p>
                 </div>
-                <div class="space-y-1">
-                    <p class="text-base-content/70">Resultados</p>
-                    <p class="font-medium">
+                <div class="gov-meta-item">
+                    <p class="gov-meta-label">Resultados</p>
+                    <p class="gov-meta-value">
                         {{ event.results_publication_date|date:"d/m/Y H:i" }}
                     </p>
                 </div>
@@ -340,14 +340,14 @@
 
             <div class="divider my-0"></div>
 
-            <div class="grid gap-4 md:grid-cols-2 text-sm">
-                <div>
-                    <p class="text-base-content/70">Instituicao organizadora</p>
-                    <p class="font-medium">{{ event.organizing_institution }}</p>
+            <div class="gov-meta-grid md:grid-cols-2 text-sm">
+                <div class="gov-meta-item">
+                    <p class="gov-meta-label">Instituicao organizadora</p>
+                    <p class="gov-meta-value">{{ event.organizing_institution }}</p>
                 </div>
-                <div>
-                    <p class="text-base-content/70">Contato da organizacao</p>
-                    <p class="font-medium">{{ event.contact_email }}</p>
+                <div class="gov-meta-item">
+                    <p class="gov-meta-label">Contato da organizacao</p>
+                    <p class="gov-meta-value">{{ event.contact_email }}</p>
                 </div>
             </div>
 
@@ -366,9 +366,9 @@
 
             <div class="divider my-0"></div>
 
-            <div class="text-sm">
-                <p class="text-base-content/70">Revisao cega</p>
-                <p class="font-medium">
+            <div class="gov-meta-item text-sm">
+                <p class="gov-meta-label">Revisao cega</p>
+                <p class="gov-meta-value">
 
                     {% if event.blind_review %}
 
@@ -403,7 +403,7 @@
             </div>
         </div>
 
-        <div class="card bg-base-100 border border-base-300 shadow-sm">
+        <div class="gov-surface">
             <div class="card-body gap-4">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <div>
@@ -417,28 +417,27 @@
 
                 {% if papers %}
 
-                    <ul class="space-y-3">
+                    <ul class="divide-y divide-base-300 rounded-lg border border-base-300 bg-base-100">
 
                         {% for paper in papers %}
 
                             <li>
                                 <a href="{% url 'paper_detail' pk=paper.pk %}"
-                                   class="card card-sm bg-base-100 border border-base-300 transition hover:border-primary/40 hover:shadow-md">
-                                    <div class="card-body gap-3">
-                                        <div class="flex flex-wrap items-center justify-between gap-2">
-                                            <h3 class="card-title text-base">{{ paper.title }}</h3>
+                                   class="block p-4 transition hover:bg-base-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                    <div class="flex flex-wrap items-start justify-between gap-3">
+                                        <div class="min-w-0 space-y-1">
+                                            <h3 class="text-base font-semibold">{{ paper.title }}</h3>
+                                            <p class="text-sm text-base-content/70">
+                                                {{ paper.abstract|truncatewords:28 }}
+                                            </p>
+                                            <p class="text-xs text-base-content/60">
+                                                Eixo temático: {{ paper.eixo_tematico.name }}
+                                            </p>
+                                        </div>
+                                        <div class="flex flex-col items-start gap-2 sm:items-end">
                                             <span class="badge badge-ghost badge-sm">
                                                 {{ paper.created_at|date:"d/m/Y" }}
                                             </span>
-                                        </div>
-                                        <p class="text-sm text-base-content/70">
-                                            {{ paper.abstract|truncatewords:28 }}
-                                        </p>
-                                        <p class="text-xs text-base-content/60">
-                                            Eixo temático: {{ paper.eixo_tematico.name }}
-                                        </p>
-
-                                        <div class="flex flex-wrap items-center justify-between gap-3">
                                             <span class="text-xs text-base-content/60">
                                                 {{ paper.coauthors.all|length }} coautor{{ paper.coauthors.all|length|pluralize }}
                                             </span>
