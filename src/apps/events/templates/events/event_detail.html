@@ -205,10 +205,22 @@
 
                                     <tr>
                                         <td>
-                                            <a href="{% url 'paper_detail' pk=item.paper.pk %}"
-                                               class="link font-medium">
-                                                {{ item.paper.title }}
-                                            </a>
+                                            {% if item.latest_submission %}
+
+                                                <a href="{% url 'submission_download' pk=item.latest_submission.pk %}"
+                                                   class="link font-medium"
+                                                   target="_blank">
+                                                    {{ item.paper.title }}
+                                                </a>
+
+                                            {% else %}
+
+                                                <a href="{% url 'paper_detail' pk=item.paper.pk %}"
+                                                   class="link font-medium">
+                                                    {{ item.paper.title }}
+                                                </a>
+
+                                            {% endif %}
                                         </td>
                                         <td>{{ item.paper.eixo_tematico.name }}</td>
                                         <td>

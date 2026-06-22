@@ -558,6 +558,10 @@ class ReviewFlowTestCase(TestCase):
         self.assertContains(response, self.eixo.name)
         self.assertContains(response, '0/1')
         self.assertContains(response, self.reviewer_user.full_name)
+        self.assertContains(
+            response,
+            reverse('submission_download', args=[self.submission.pk]),
+        )
 
         plain_user = self.create_user('plain@example.com')
         self.client.force_login(plain_user)

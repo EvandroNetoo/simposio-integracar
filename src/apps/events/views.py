@@ -115,6 +115,7 @@ class EventDetailView(View):
             .prefetch_related(
                 'review_assignments__review',
                 'review_assignments__reviewer__user',
+                'submission_set',
             )
             .order_by('title')
         )
@@ -138,6 +139,12 @@ class EventDetailView(View):
 
         for paper in event_papers:
             assignments = list(paper.review_assignments.all())
+            submissions = list(paper.submission_set.all())
+            latest_submission = max(
+                submissions,
+                key=lambda submission: submission.version,
+                default=None,
+            )
             assignments_total = len(assignments)
             assignments_completed = sum(
                 1 for assignment in assignments if hasattr(assignment, 'review')
@@ -160,6 +167,7 @@ class EventDetailView(View):
 
             paper_details.append({
                 'paper': paper,
+                'latest_submission': latest_submission,
                 'assignments_total': assignments_total,
                 'assignments_completed': assignments_completed,
                 'assignments_pending': (
