@@ -1,5 +1,6 @@
 from accounts.models import User
 from django import forms
+from django.forms import BaseInlineFormSet
 from django.forms import inlineformset_factory
 from events.models import EixoTematico
 
@@ -67,10 +68,42 @@ class CoauthorForm(NoRequiredAttrFormMixin, forms.ModelForm):
             self.fields[field_name].widget.attrs['placeholder'] = placeholder
 
 
+class BaseCoauthorFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        if any(self.errors):
+            return
+
+        seen_users = set()
+        seen_manual_emails = set()
+        for form in self.forms:
+            if self.can_delete and self._should_delete_form(form):
+                continue
+
+            user = form.cleaned_data.get('user')
+            email = form.cleaned_data.get('email', '').strip().lower()
+
+            if user:
+                if user.pk in seen_users:
+                    raise forms.ValidationError(
+                        'Nao adicione o mesmo usuario como coautor mais de uma vez.'
+                    )
+                seen_users.add(user.pk)
+                continue
+
+            if email:
+                if email in seen_manual_emails:
+                    raise forms.ValidationError(
+                        'Nao adicione o mesmo email manual como coautor mais de uma vez.'
+                    )
+                seen_manual_emails.add(email)
+
+
 CoauthorFormSet = inlineformset_factory(
     Paper,
     Coauthor,
     form=CoauthorForm,
+    formset=BaseCoauthorFormSet,
     extra=0,
     can_delete=True,
 )

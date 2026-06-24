@@ -1,6 +1,7 @@
 from accounts.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 from events.models import EixoTematico, Event
 
 
@@ -78,10 +79,18 @@ class Coauthor(models.Model):
     class Meta:
         verbose_name = 'coautor'
         verbose_name_plural = 'coautores'
-        unique_together = (
-            ('paper', 'user'),
-            ('paper', 'email'),
-        )
+        constraints = [
+            models.UniqueConstraint(
+                fields=['paper', 'user'],
+                condition=Q(user__isnull=False),
+                name='uniq_coauthor_paper_user',
+            ),
+            models.UniqueConstraint(
+                fields=['paper', 'email'],
+                condition=Q(user__isnull=True),
+                name='uniq_coauthor_paper_email',
+            ),
+        ]
         ordering = ('authorship_order',)
 
     def __str__(self):

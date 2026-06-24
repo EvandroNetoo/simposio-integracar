@@ -239,6 +239,7 @@ class PaperUpdateView(PaperFormBaseView):
         )
 
     def post(self, request: HttpRequest, **kwargs):
+        print('request.POST:', request.POST)
         form = self.form_class(
             request.POST,
             event=self.event,

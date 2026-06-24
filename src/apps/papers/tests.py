@@ -276,6 +276,64 @@ class EixoTematicoTestCase(TestCase):
         self.assertEqual(coauthors[1].email, 'manual@example.com')
         self.assertEqual(coauthors[1].authorship_order, 3)
 
+    def test_paper_update_saves_multiple_system_user_coauthors(self):
+        self.client.force_login(self.user)
+        event = self.create_event()
+        eixo = EixoTematico.objects.create(event=event, name='Educacao')
+        paper = Paper.objects.create(
+            user=self.user,
+            event=event,
+            eixo_tematico=eixo,
+            title='Trabalho',
+            abstract='Resumo',
+        )
+        first_coauthor = User.objects.create_user(
+            email='first-coauthor@example.com',
+            first_name='First',
+            surname='Coauthor',
+        )
+        second_coauthor = User.objects.create_user(
+            email='second-coauthor@example.com',
+            first_name='Second',
+            surname='Coauthor',
+        )
+
+        response = self.client.post(
+            reverse('paper_change', args=[paper.pk]),
+            {
+                'title': 'Trabalho atualizado',
+                'abstract': 'Resumo atualizado',
+                'eixo_tematico': eixo.pk,
+                'coauthors-TOTAL_FORMS': '2',
+                'coauthors-INITIAL_FORMS': '0',
+                'coauthors-MIN_NUM_FORMS': '0',
+                'coauthors-MAX_NUM_FORMS': '1000',
+                'coauthors-0-user': first_coauthor.pk,
+                'coauthors-0-name': '',
+                'coauthors-0-email': '',
+                'coauthors-0-institution': '',
+                'coauthors-0-affiliation_type': '',
+                'coauthors-0-authorship_order': '2',
+                'coauthors-1-user': second_coauthor.pk,
+                'coauthors-1-name': '',
+                'coauthors-1-email': '',
+                'coauthors-1-institution': '',
+                'coauthors-1-affiliation_type': '',
+                'coauthors-1-authorship_order': '3',
+            },
+        )
+
+        self.assertRedirects(response, reverse('paper_detail', args=[paper.pk]))
+        self.assertEqual(
+            list(
+                paper.coauthors.order_by('authorship_order').values_list(
+                    'user',
+                    flat=True,
+                )
+            ),
+            [first_coauthor.pk, second_coauthor.pk],
+        )
+
     def test_paper_detail_shows_pdf_upload_label(self):
         self.client.force_login(self.user)
         event = self.create_event()
