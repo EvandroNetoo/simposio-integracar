@@ -138,7 +138,7 @@ COTTON_DIR = 'components'
 
 # Django Debug Toolbar
 
-if DEBUG:
+if DEBUG and 'test' not in sys.argv:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(
         MIDDLEWARE.index('django.middleware.common.CommonMiddleware') + 1,

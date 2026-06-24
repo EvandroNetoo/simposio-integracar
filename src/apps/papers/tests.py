@@ -349,4 +349,4 @@ class EixoTematicoTestCase(TestCase):
         response = self.client.get(reverse('paper_detail', args=[paper.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Fazer upload do PDF')
+        self.assertContains(response, 'Nova submissao')

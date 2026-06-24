@@ -1,0 +1,104 @@
+{% extends 'platform_base.html' %}
+
+{% block platform_content %}
+
+    <section class="space-y-4">
+        <div class="gov-page-header">
+            <div>
+                <h1 class="text-2xl font-bold">Avaliadores do trabalho</h1>
+                <p class="text-sm text-base-content/70">
+                    {{ paper.title }} · {{ paper.event }}
+                </p>
+            </div>
+            <a href="{% url 'committee_dashboard' event_pk=paper.event_id %}"
+               class="btn btn-ghost">Voltar</a>
+        </div>
+
+        <div class="gov-surface">
+            <div class="card-body">
+                <div class="gov-meta-grid md:grid-cols-2 text-sm">
+                    <div class="gov-meta-item">
+                        <p class="gov-meta-label">Trabalho</p>
+                        <p class="gov-meta-value">{{ paper.title }}</p>
+                    </div>
+                    <div class="gov-meta-item">
+                        <p class="gov-meta-label">Eixo tematico</p>
+                        <p class="gov-meta-value">{{ paper.eixo_tematico.name }}</p>
+                    </div>
+                </div>
+
+                <div class="rounded-lg border border-base-300 p-4">
+                    <div>
+                        <h2 class="text-base font-semibold">Atribuicoes atuais</h2>
+                        <p class="text-sm text-base-content/70">
+                            Atribuicoes com parecer enviado ficam preservadas.
+                        </p>
+                    </div>
+                    <ul class="mt-3 divide-y divide-base-300 rounded-lg border border-base-300 text-sm">
+
+                        {% for assignment in paper.review_assignments.all %}
+
+                            <li class="flex flex-wrap items-center justify-between gap-2 p-3">
+                                <div>
+                                    <p class="font-medium">
+                                        {{ assignment.reviewer.user.full_name|default:assignment.reviewer.user.email }}
+                                    </p>
+
+                                    {% if assignment.review %}
+
+                                        <span class="badge badge-success badge-sm">parecer enviado</span>
+
+                                    {% else %}
+
+                                        <span class="badge badge-warning badge-sm">pendente</span>
+
+                                    {% endif %}
+                                </div>
+
+                                {% if assignment.review %}
+
+                                    <span class="text-xs text-base-content/60">
+                                        Historico preservado
+                                    </span>
+
+                                {% else %}
+
+                                    <form method="post"
+                                          action="{% url 'review_assignment_delete' assignment_pk=assignment.pk %}"
+                                          onsubmit="return confirm('Remover esta atribuicao pendente?');">
+                                        {% csrf_token %}
+                                        <button class="btn btn-ghost btn-xs text-error gap-1">
+                                            <i class="ph ph-trash text-base" aria-hidden="true"></i>
+                                            Remover
+                                        </button>
+                                    </form>
+
+                                {% endif %}
+                            </li>
+
+                        {% empty %}
+
+                            <li class="p-3 text-base-content/60">Nenhum avaliador atribuido.</li>
+
+                        {% endfor %}
+                    </ul>
+                </div>
+                <form method="post" class="space-y-4 rounded-lg border border-base-300 p-4">
+                    {% csrf_token %}
+                    <div>
+                        <h2 class="text-base font-semibold">Atualizar distribuicao</h2>
+                        <p class="text-sm text-base-content/70">
+                            Selecione os avaliadores que devem acompanhar este trabalho.
+                        </p>
+                    </div>
+                    <c-django-form />
+                    <button class="btn btn-primary gap-2">
+                        <i class="ph ph-check text-lg" aria-hidden="true"></i>
+                        Salvar distribuicao
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+{% endblock platform_content %}

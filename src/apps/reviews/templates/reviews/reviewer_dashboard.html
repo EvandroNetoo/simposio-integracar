@@ -1,0 +1,72 @@
+{% extends 'platform_base.html' %}
+
+{% block platform_content %}
+
+    <section class="space-y-4">
+        <div class="gov-page-header">
+            <div>
+                <h1 class="text-2xl font-bold">Minhas avaliacoes</h1>
+                <p class="text-sm text-base-content/70">
+                    Trabalhos atribuidos e prazos de avaliacao.
+                </p>
+            </div>
+        </div>
+
+        <div class="gov-surface">
+            <div class="card-body">
+
+                {% if assignments %}
+
+                    <div class="divide-y divide-base-300 rounded-lg border border-base-300">
+
+                        {% for assignment in assignments %}
+
+                            <a href="{% url 'review_detail' pk=assignment.pk %}"
+                               class="block p-4 transition hover:bg-base-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                <div class="flex flex-wrap items-start justify-between gap-3">
+                                    <div class="min-w-0 space-y-1">
+                                        <h2 class="text-base font-semibold">
+
+                                            {% if assignment.paper.event.blind_review %}
+
+                                                Trabalho #{{ assignment.paper.pk }}
+
+                                            {% else %}
+
+                                                {{ assignment.paper.title }}
+
+                                            {% endif %}
+                                        </h2>
+                                        <p class="text-sm text-base-content/70">
+                                            {{ assignment.paper.event }}
+                                        </p>
+                                        <p class="text-xs text-base-content/60">
+                                            Prazo: {{ assignment.paper.event.evaluation_period_end|date:"d/m/Y H:i" }}
+                                        </p>
+                                    </div>
+
+                                    {% if assignment.review %}
+
+                                        <span class="badge badge-success">Parecer enviado</span>
+
+                                    {% else %}
+
+                                        <span class="badge badge-warning">Pendente</span>
+
+                                    {% endif %}
+                                </div>
+                            </a>
+
+                        {% endfor %}
+                    </div>
+
+                {% else %}
+
+                    <div class="alert alert-info">Nenhum trabalho atribuido.</div>
+
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+{% endblock platform_content %}

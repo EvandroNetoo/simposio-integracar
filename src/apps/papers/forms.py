@@ -1,7 +1,7 @@
 from accounts.models import User
 from django import forms
-from django.forms import BaseInlineFormSet
-from django.forms import inlineformset_factory
+from django.core.exceptions import ValidationError
+from django.forms import BaseInlineFormSet, inlineformset_factory
 from events.models import EixoTematico
 
 from core.mixins import NoRequiredAttrFormMixin
@@ -122,3 +122,12 @@ class SubmissionForm(NoRequiredAttrFormMixin, forms.ModelForm):
             'Observações sobre a submissão (opcional)'
         )
         self.fields['observations'].widget.attrs['rows'] = 2
+
+    def clean_file(self):
+        file = self.cleaned_data['file']
+        if not file.name.lower().endswith('.pdf'):
+            raise ValidationError('Envie um arquivo no formato PDF.')
+        content_type = getattr(file, 'content_type', '')
+        if content_type and content_type != 'application/pdf':
+            raise ValidationError('O arquivo enviado não é um PDF válido.')
+        return file

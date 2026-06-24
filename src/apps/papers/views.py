@@ -1,16 +1,17 @@
 from accounts.models import Profile, User
 from django.contrib.auth.decorators import user_passes_test
-from django.http import HttpResponse
+from django.db.models import Q
+from django.http import Http404, HttpResponse
 from django.http.request import HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views import View
 from events.models import Event
-from reviews.models import Review
 
 from papers.forms import CoauthorFormSet, PaperForm, SubmissionForm
 from papers.models import Paper, Submission
+from reviews.notifications import notify_submission_received
 
 
 class PaperFormBaseView(View):
@@ -51,10 +52,12 @@ class PaperListView(View):
 
     def get(self, request: HttpRequest):
         papers = (
-            Paper.objects
-            .filter(user=request.user)
+            Paper.objects.filter(
+                Q(user=request.user) | Q(coauthors__user=request.user)
+            )
             .select_related('event', 'eixo_tematico')
-            .prefetch_related('coauthors')
+            .prefetch_related('coauthors__user')
+            .distinct()
             .order_by('-created_at')
         )
         context = {
@@ -162,44 +165,37 @@ class PaperDetailView(View):
                 'event',
                 'eixo_tematico',
                 'user',
-            ).prefetch_related('coauthors__user'),
+            ).prefetch_related(
+                'coauthors__user',
+                'review_assignments__reviewer__user',
+                'review_assignments__review',
+            ),
             pk=pk,
-            user=request.user,
         )
+        if (
+            paper.user_id != request.user.id
+            and not paper.coauthors.filter(user=request.user).exists()
+        ):
+            raise Http404
         coauthors = paper.coauthors.select_related('user').all()
         submissions = list(paper.submission_set.all().order_by('created_at'))
-        reviews = list(
-            Review.objects
-            .filter(assignment__paper=paper)
-            .select_related(
-                'assignment__reviewer__user',
-                'assignment',
-            )
-            .order_by('submitted_at')
-        )
-        submission_items = []
-        for index, submission in enumerate(submissions):
-            next_created_at = None
-            if index + 1 < len(submissions):
-                next_created_at = submissions[index + 1].created_at
-            submission_reviews = [
-                review
-                for review in reviews
-                if review.submitted_at >= submission.created_at
-                and (
-                    next_created_at is None
-                    or review.submitted_at < next_created_at
-                )
-            ]
-            submission_items.append({
+        assignments = list(paper.review_assignments.all())
+        submission_items = [
+            {
                 'submission': submission,
-                'reviews': submission_reviews,
-            })
+            }
+            for submission in submissions
+        ]
         context = {
             'paper': paper,
             'event': paper.event,
             'coauthors': coauthors,
             'submission_items': submission_items,
+            'assignments': assignments,
+            'published_reviews_count': sum(
+                1 for assignment in assignments if hasattr(assignment, 'review')
+            ),
+            'has_active_review': paper.status == Paper.Status.UNDER_REVIEW,
         }
         return render(request, self.template_name, context)
 
@@ -212,13 +208,15 @@ class PaperUpdateView(PaperFormBaseView):
             user=request.user,
         )
         self.event = self.paper.event
+        if self.paper.status == Paper.Status.UNDER_REVIEW:
+            return redirect('paper_detail', pk=self.paper.pk)
         return super().dispatch(request, *args, **kwargs)
 
     def get_page_context(self):
         return {
             'page_title': 'Editar trabalho',
-            'page_subtitle': 'Atualize as informações do trabalho.',
-            'submit_label': 'Salvar alterações',
+            'page_subtitle': 'Atualize as informacoes do trabalho.',
+            'submit_label': 'Salvar alteracoes',
             'back_url': reverse(
                 'paper_detail',
                 kwargs={'pk': self.paper.pk},
@@ -266,12 +264,19 @@ class PaperUpdateView(PaperFormBaseView):
 
 
 class SubmissionCreateView(View):
+    def get_paper(self, request, pk):
+        paper = get_object_or_404(Paper, pk=pk, user=request.user)
+        if paper.status == Paper.Status.UNDER_REVIEW:
+            return None
+        return paper
+
     def get(self, request: HttpRequest, pk: int):
-        paper = get_object_or_404(
-            Paper,
-            pk=pk,
-            user=request.user,
-        )
+        paper = self.get_paper(request, pk)
+        if paper is None:
+            return HttpResponse(
+                'Nao e possivel enviar uma versao durante a avaliacao.',
+                status=409,
+            )
         form = SubmissionForm()
         context = {
             'paper': paper,
@@ -280,11 +285,12 @@ class SubmissionCreateView(View):
         return render(request, 'papers/submission_modal.html', context)
 
     def post(self, request: HttpRequest, pk: int):
-        paper = get_object_or_404(
-            Paper,
-            pk=pk,
-            user=request.user,
-        )
+        paper = self.get_paper(request, pk)
+        if paper is None:
+            return HttpResponse(
+                'Nao e possivel enviar uma versao durante a avaliacao.',
+                status=409,
+            )
         form = SubmissionForm(request.POST, request.FILES)
         if not form.is_valid():
             context = {
@@ -297,6 +303,17 @@ class SubmissionCreateView(View):
         submission: Submission = form.save(commit=False)
         submission.paper = paper
         submission.save()
+        is_correction = paper.status == Paper.Status.APPROVED_WITH_CHANGES
+        if paper.status == Paper.Status.APPROVED_WITH_CHANGES:
+            paper.status = Paper.Status.CORRECTION_SUBMITTED
+        else:
+            paper.status = Paper.Status.SUBMITTED
+        paper.save(update_fields=('status',))
+        notify_submission_received(
+            request,
+            submission,
+            correction=is_correction,
+        )
         response = HttpResponse('')
         response.headers['HX-Redirect'] = reverse(
             'paper_detail',

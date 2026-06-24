@@ -316,15 +316,123 @@ h3,
     font-weight: 600;
 }
 
+.gov-nav-link {
+    display: flex;
+    min-height: 42px;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px !important;
+    border: 1px solid transparent;
+    text-decoration: none;
+}
+
 .menu a:hover,
 .menu a:focus-visible {
     background: rgb(54 108 136 / 10%);
     color: var(--secom-azul-3);
 }
 
-.menu a.bg-primary {
+.gov-nav-link.is-active {
+    border-color: rgb(54 108 136 / 22%);
     background: var(--secom-azul-1) !important;
     color: var(--secom-branco) !important;
+    font-weight: 800;
+}
+
+.gov-nav-link.is-active i {
+    color: var(--secom-branco);
+}
+
+.gov-nav-link i {
+    width: 20px;
+    text-align: center;
+}
+
+.table {
+    border-radius: var(--radius-box);
+    font-size: var(--gov-font-control) !important;
+}
+
+.table thead th {
+    border-bottom: 1px solid var(--secom-cinza-2);
+    color: var(--secom-cinza-3);
+    font-size: var(--gov-font-small) !important;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid rgb(207 207 207 / 62%);
+}
+
+.table tbody tr:hover {
+    background: rgb(54 108 136 / 5%);
+}
+
+.table :where(th, td) {
+    vertical-align: top;
+}
+
+.card-body {
+    gap: var(--gov-spacing-sm);
+}
+
+.gov-surface {
+    border: 1px solid var(--secom-cinza-2);
+    border-radius: var(--radius-box);
+    background: var(--secom-branco);
+    box-shadow: 0 10px 28px rgb(88 88 87 / 8%);
+}
+
+.gov-surface-body {
+    padding: var(--gov-spacing-md);
+}
+
+.gov-stat-card {
+    display: grid;
+    gap: 4px;
+    min-height: 92px;
+    align-content: center;
+    border: 1px solid var(--secom-cinza-2);
+    border-radius: var(--radius-box);
+    background: var(--secom-branco);
+    padding: 14px;
+}
+
+.gov-stat-label {
+    color: var(--secom-cinza-3);
+    font-size: var(--gov-font-small);
+    font-weight: 700;
+}
+
+.gov-stat-value {
+    color: var(--secom-azul-3);
+    font-size: 1.55rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.gov-meta-grid {
+    display: grid;
+    gap: var(--gov-spacing-sm);
+}
+
+.gov-meta-item {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.gov-meta-label {
+    color: var(--secom-cinza-3);
+    font-size: var(--gov-font-small);
+    font-weight: 700;
+}
+
+.gov-meta-value {
+    color: var(--secom-cinza-3);
+    font-weight: 700;
 }
 
 .fieldset {

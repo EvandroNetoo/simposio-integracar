@@ -12,30 +12,37 @@
             </div>
 
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <a href="{% url 'paper_change' pk=paper.pk %}"
-                   class="btn btn-primary gap-2">
-                    <i class="ph ph-pencil-simple text-lg"></i>
-                    Editar trabalho
-                </a>
+
+                <span class="badge badge-outline">{{ paper.get_status_display }}</span>
+
+                {% if not has_active_review %}
+
+                    <a href="{% url 'paper_change' pk=paper.pk %}"
+                       class="btn btn-primary gap-2">
+                        <i class="ph ph-pencil-simple text-lg"></i>
+                        Editar trabalho
+                    </a>
+
+                {% endif %}
                 <a href="{% url 'paper_list' %}" class="btn btn-ghost">
                     Voltar aos trabalhos
                 </a>
             </div>
         </div>
 
-        <div class="bg-base-100 border border-base-300 rounded-lg p-6 shadow-sm space-y-4">
-            <div class="grid gap-4 md:grid-cols-2 text-sm">
-                <div class="space-y-1">
-                    <p class="text-base-content/70">Autor principal</p>
-                    <p class="font-medium">{{ paper.user.full_name|default:paper.user.email }}</p>
+        <div class="gov-surface gov-surface-body space-y-4">
+            <div class="gov-meta-grid md:grid-cols-3 text-sm">
+                <div class="gov-meta-item">
+                    <p class="gov-meta-label">Autor principal</p>
+                    <p class="gov-meta-value">{{ paper.user.full_name|default:paper.user.email }}</p>
                 </div>
-                <div class="space-y-1">
-                    <p class="text-base-content/70">Eixo temático</p>
-                    <p class="font-medium">{{ paper.eixo_tematico.name }}</p>
+                <div class="gov-meta-item">
+                    <p class="gov-meta-label">Eixo tematico</p>
+                    <p class="gov-meta-value">{{ paper.eixo_tematico.name }}</p>
                 </div>
-                <div class="space-y-1">
-                    <p class="text-base-content/70">Enviado em</p>
-                    <p class="font-medium">{{ paper.created_at|date:"d/m/Y H:i" }}</p>
+                <div class="gov-meta-item">
+                    <p class="gov-meta-label">Enviado em</p>
+                    <p class="gov-meta-value">{{ paper.created_at|date:"d/m/Y H:i" }}</p>
                 </div>
             </div>
 
@@ -125,22 +132,31 @@
             </div>
         </div>
 
-        <div class="bg-base-100 border border-base-300 rounded-lg p-6 shadow-sm space-y-4">
+        <div class="gov-surface gov-surface-body space-y-4">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 class="text-base font-semibold">Submissões</h2>
+                    <h2 class="text-base font-semibold">Submissoes</h2>
                     <p class="text-sm text-base-content/60">
                         Historico de envios e revisoes do trabalho.
                     </p>
                 </div>
                 <div>
-                    <button class="btn btn-secondary btn-sm gap-2"
-                            hx-get="{% url 'submission_create' pk=paper.pk %}"
-                            hx-target="body"
-                            hx-swap="beforeend">
-                        <i class="ph ph-upload-simple text-lg"></i>
-                        Fazer upload do PDF
-                    </button>
+
+                    {% if not has_active_review %}
+
+                        <button class="btn btn-secondary btn-sm gap-2"
+                                hx-get="{% url 'submission_create' pk=paper.pk %}"
+                                hx-target="body"
+                                hx-swap="beforeend">
+                            <i class="ph ph-upload-simple text-lg"></i>
+                            Nova submissao
+                        </button>
+
+                    {% else %}
+
+                        <span class="badge badge-warning">Envio bloqueado durante a avaliacao</span>
+
+                    {% endif %}
                 </div>
             </div>
 
@@ -154,22 +170,21 @@
                                 <div class="flex flex-wrap items-center justify-between gap-2">
                                     <div class="space-y-1">
                                         <p class="text-xs text-base-content/60">
-                                            Enviada em {{ item.submission.created_at|date:"d/m/Y H:i" }}
+                                            Versao {{ item.submission.version }} · enviada em
+                                            {{ item.submission.created_at|date:"d/m/Y H:i" }}
                                         </p>
                                     </div>
-                                    <span class="badge badge-ghost badge-sm">
-                                        {{ item.reviews|length }} revisões
-                                    </span>
                                 </div>
                             </summary>
                             <div class="collapse-content text-sm">
                                 <div class="space-y-3">
                                     <div class="space-y-1">
                                         <p class="text-base-content/70">Arquivo</p>
-                                        <a class="link link-primary break-all"
-                                           href="{{ item.submission.file.url }}"
+                                        <a class="btn btn-ghost btn-sm gap-2 w-fit"
+                                           href="{% url 'submission_download' pk=item.submission.pk %}"
                                            target="_blank">
-                                            Vizualizar arquivo enviado
+                                            <i class="ph ph-file-pdf text-lg" aria-hidden="true"></i>
+                                            Visualizar arquivo enviado
                                         </a>
                                     </div>
 
@@ -181,52 +196,6 @@
                                                 {{ item.submission.observations }}
                                             </p>
                                         </div>
-
-                                    {% endif %}
-                                </div>
-
-                                <div class="divider my-3"></div>
-
-                                <div class="space-y-2">
-                                    <h3 class="text-sm font-semibold">Reviews</h3>
-
-                                    {% if item.reviews %}
-
-                                        <ul class="space-y-2">
-
-                                            {% for review in item.reviews %}
-
-                                                <li class="rounded-lg border border-base-300 bg-base-100 p-3 space-y-2">
-                                                    <div class="flex flex-wrap items-center gap-2">
-                                                        <p class="text-sm font-medium">
-                                                            {{ review.assignment.reviewer.user.full_name|default:review.assignment.reviewer.user.email }}
-                                                        </p>
-                                                        <span class="badge badge-outline badge-sm">
-                                                            {{ review.get_recommendation_display }}
-                                                        </span>
-
-                                                        {% if review.score %}
-
-                                                            <span class="badge badge-ghost badge-sm">Nota {{ review.score }}</span>
-
-                                                        {% endif %}
-                                                        <span class="text-xs text-base-content/60">
-                                                            {{ review.submitted_at|date:"d/m/Y H:i" }}
-                                                        </span>
-                                                    </div>
-                                                    <p class="text-sm text-base-content/70 whitespace-pre-line">
-                                                        {{ review.comments_to_author }}
-                                                    </p>
-                                                </li>
-
-                                            {% endfor %}
-                                        </ul>
-
-                                    {% else %}
-
-                                        <p class="text-xs text-base-content/60">
-                                            Nenhuma revisão enviada para esta submissão.
-                                        </p>
 
                                     {% endif %}
                                 </div>
@@ -244,6 +213,97 @@
 
                 {% endfor %}
             </ul>
+        </div>
+
+        <div class="gov-surface gov-surface-body space-y-4">
+            <div>
+                <h2 class="text-base font-semibold">Pareceres</h2>
+                <p class="text-sm text-base-content/60">
+                    Retorno publicado pela comissao avaliadora.
+                </p>
+            </div>
+
+            {% if published_reviews_count %}
+
+                <ul class="space-y-2">
+
+                    {% for assignment in assignments %}
+
+                        {% if assignment.review %}
+
+                            <li class="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
+                                <div class="flex flex-wrap items-start justify-between gap-3">
+                                    <div>
+                                        <p class="text-sm font-medium">
+
+                                            {% if event.blind_review %}
+
+                                                Avaliador anonimo
+
+                                            {% else %}
+
+                                                {{ assignment.reviewer.user.full_name|default:assignment.reviewer.user.email }}
+
+                                            {% endif %}
+                                        </p>
+                                        <p class="text-xs text-base-content/60">
+                                            {{ assignment.review.updated_at|date:"d/m/Y H:i" }}
+                                        </p>
+                                    </div>
+                                    <span class="badge badge-outline badge-sm">
+                                        {{ assignment.review.get_recommendation_display }}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-base-content/70 whitespace-pre-line">
+                                    {{ assignment.review.comments_to_author }}
+                                </p>
+                            </li>
+
+                        {% endif %}
+
+                    {% endfor %}
+                </ul>
+
+            {% elif assignments %}
+
+                <div role="alert" class="alert alert-warning alert-soft text-sm">
+                    <i class="ph ph-clock text-lg" aria-hidden="true"></i>
+                    <div>
+                        <p class="font-medium">Pareceres ainda nao publicados.</p>
+                        <p class="text-xs text-base-content/60">
+                            O trabalho ja esta em avaliacao, mas nenhum avaliador enviou parecer ate o momento.
+                        </p>
+                    </div>
+                </div>
+
+            {% else %}
+
+                <div role="alert" class="alert alert-info alert-soft text-sm">
+                    <i class="ph ph-info text-lg" aria-hidden="true"></i>
+                    <div>
+                        <p class="font-medium">Nenhum avaliador atribuido.</p>
+                        <p class="text-xs text-base-content/60">
+                            Quando a avaliacao for publicada, o retorno aparecera aqui.
+                        </p>
+                    </div>
+                </div>
+
+            {% endif %}
+
+            {% if paper.final_decision %}
+
+                <div class="alert alert-info">
+                    <div>
+                        <p class="font-semibold">
+                            Decisao: {{ paper.final_decision.get_result_display }}
+                        </p>
+                        <p class="text-sm whitespace-pre-line">
+                            {{ paper.final_decision.justification }}
+                        </p>
+                    </div>
+                </div>
+
+            {% endif %}
         </div>
     </section>
 

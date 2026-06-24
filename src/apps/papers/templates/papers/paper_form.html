@@ -22,7 +22,7 @@
             {% endif %}
         </div>
 
-        <div class="card bg-base-100 border border-base-300 shadow-sm overflow-hidden">
+        <div class="gov-surface overflow-hidden">
 
             <div class="card-body">
 
@@ -118,7 +118,7 @@
 
                             {% for coauthor_form in coauthor_formset %}
 
-                                <div class="card card-sm bg-base-100 border border-base-300 shadow-sm"
+                                <div class="gov-surface"
                                      data-coauthor-row
                                      data-coauthor-prefix="{{ coauthor_form.prefix }}">
                                     <div class="card-body gap-4 p-4">
@@ -219,7 +219,7 @@
                             Você poderá alterar os coautores depois do envio.
                         </p>
 
-                        <div class="card bg-base-200/60 border border-base-300"
+                        <div class="gov-surface"
                              data-author-order
                              data-main-author="{{ main_author|default:request.user.full_name|default:request.user.email }}">
                             <div class="card-body gap-4">
@@ -245,7 +245,7 @@
 
                             {% with coauthor_form=coauthor_formset.empty_form %}
 
-                                <div class="card card-sm bg-base-100 border border-base-300 shadow-sm"
+                                <div class="gov-surface"
                                      data-coauthor-row
                                      data-coauthor-prefix="__prefix__">
                                     <div class="card-body gap-4 p-4">
@@ -328,7 +328,8 @@
                     </div>
 
                     <div class="card-actions justify-end">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary gap-2">
+                            <i class="ph ph-paper-plane-tilt text-lg" aria-hidden="true"></i>
                             {{ submit_label|default:"Enviar trabalho" }}
                         </button>
                     </div>

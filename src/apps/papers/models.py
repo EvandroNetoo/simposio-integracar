@@ -6,6 +6,19 @@ from events.models import EixoTematico, Event
 
 
 class Paper(models.Model):
+    class Status(models.TextChoices):
+        DRAFT = 'draft', 'Rascunho'
+        SUBMITTED = 'submitted', 'Submetido'
+        UNDER_REVIEW = 'under_review', 'Em avaliação'
+        APPROVED = 'approved', 'Aprovado'
+        APPROVED_WITH_CHANGES = (
+            'approved_with_changes',
+            'Aprovado com correções',
+        )
+        REJECTED = 'rejected', 'Reprovado'
+        CORRECTION_SUBMITTED = 'correction_submitted', 'Correção enviada'
+        REVIEW_COMPLETED = 'review_completed', 'Avaliação finalizada'
+
     user = models.ForeignKey(
         User, models.CASCADE, related_name='papers', verbose_name='autor'
     )
@@ -20,6 +33,12 @@ class Paper(models.Model):
     )
     title = models.CharField(max_length=255, verbose_name='título')
     abstract = models.TextField(verbose_name='resumo')
+    status = models.CharField(
+        'situação',
+        max_length=30,
+        choices=Status.choices,
+        default=Status.DRAFT,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -131,12 +150,35 @@ class Coauthor(models.Model):
 class Submission(models.Model):
     paper = models.ForeignKey(Paper, models.CASCADE)
     file = models.FileField(upload_to='submissions/')
+    version = models.PositiveIntegerField(
+        'versão',
+        editable=False,
+    )
     observations = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = 'submissão'
         verbose_name_plural = 'submissões'
+        ordering = ('version',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=('paper', 'version'),
+                name='unique_submission_version_per_paper',
+            )
+        ]
 
     def __str__(self):
-        return f'Submission by {self.paper.user.email} at {self.created_at}'
+        return f'{self.paper} - versão {self.version}'
+
+    def save(self, *args, **kwargs):
+        if not self.version:
+            last_version = (
+                Submission.objects
+                .filter(paper=self.paper)
+                .order_by('-version')
+                .values_list('version', flat=True)
+                .first()
+            )
+            self.version = (last_version or 0) + 1
+        super().save(*args, **kwargs)

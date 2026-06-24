@@ -27,6 +27,7 @@ class EventAdmin(admin.ModelAdmin):
         'submission_period_end',
         'results_publication_date',
         'blind_review',
+        'minimum_reviewers',
     )
     list_filter = ('year', 'blind_review', 'organizing_institution')
     search_fields = (
@@ -79,7 +80,13 @@ class EventAdmin(admin.ModelAdmin):
         ),
         (
             'Rules and review',
-            {'fields': ('submission_rules', 'blind_review')},
+            {
+                'fields': (
+                    'submission_rules',
+                    'blind_review',
+                    'minimum_reviewers',
+                )
+            },
         ),
     )
 

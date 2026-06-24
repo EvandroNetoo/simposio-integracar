@@ -66,50 +66,47 @@
                    class="drawer-overlay"></label>
             <aside class="gov-sidebar min-h-full w-72 p-4 flex flex-col"
                    aria-label="Menu principal">
-                <div class="gov-sidebar-brand flex items-center gap-2 mb-6 px-2">
+                <div class="gov-sidebar-brand flex items-center gap-3 mb-6 px-2">
                     <img class="h-10 w-auto"
                          src="{% static 'img/logo.png' %}"
                          alt=""
                          aria-hidden="true" />
-                    <span class="font-bold flex items-center gap-2 text-xl">
-                        Simpósio IntegraCAR
-                    </span>
+                    <span class="font-bold leading-tight text-lg">Simpósio IntegraCAR</span>
                 </div>
 
                 {% with current_url=request.resolver_match.url_name %}
 
                     <ul class="menu w-full flex-1">
                         <li>
-                            {# djlint:off #}
-                            <a href="{% url 'event_list' %}" class=" 
-                                {% if current_url == 'event_list' or current_url == 'event_detail' or current_url == 'event_create' or current_url == 'event_update' %}
-                                     bg-primary text-primary-content font-bold 
-                                {% endif %}">
-                                <i class="ph{% if current_url == 'event_list' or current_url == 'event_detail' or current_url == 'event_create' or current_url == 'event_update' %}-fill text-secondary {% endif %} ph-presentation text-lg"
-                                   aria-hidden="true">
-                                </i>
+                            <a href="{% url 'event_list' %}"
+                               class="gov-nav-link {% if current_url == 'event_list' or current_url == 'event_detail' or current_url == 'event_create' or current_url == 'event_update' %}is-active{% endif %}">
+                                <i class="ph ph-presentation text-lg" aria-hidden="true"></i>
                                 Eventos
                             </a>
-
-                            {# djlint:on #}
                         </li>
                         <li>
-                            {# djlint:off #}
-                            <a href="{% url 'paper_list' %}" class=" 
-                                {% if current_url == 'paper_list' or current_url == 'paper_detail' or current_url == 'paper_change' or current_url == 'paper_create' %}
-                                     bg-primary text-primary-content font-bold 
-                                {% endif %}">
-                                <i class="ph{% if current_url == 'paper_list' or current_url == 'paper_detail' or current_url == 'paper_change' or current_url == 'paper_create' %}-fill text-secondary {% endif %} ph-file-text text-lg"
-                                   aria-hidden="true">
-                                </i>
+                            <a href="{% url 'paper_list' %}"
+                               class="gov-nav-link {% if current_url == 'paper_list' or current_url == 'paper_detail' or current_url == 'paper_change' or current_url == 'paper_create' %}is-active{% endif %}">
+                                <i class="ph ph-file-text text-lg" aria-hidden="true"></i>
                                 Meus trabalhos
                             </a>
-
-                            {# djlint:on #}
                         </li>
+
+                        {% if request.user.events_as_reviewer.exists %}
+
+                            <li>
+                                <a href="{% url 'reviewer_dashboard' %}"
+                                   class="gov-nav-link {% if current_url == 'reviewer_dashboard' or current_url == 'review_detail' %}is-active{% endif %}">
+                                    <i class="ph ph-check-square-offset text-lg" aria-hidden="true"></i>
+                                    Avaliações
+                                </a>
+                            </li>
+
+                        {% endif %}
                     </ul>
 
                 {% endwith %}
+
 
                 <div class="px-2 py-4 text-xs text-base-content/50">
                     <div class="dropdown dropdown-top dropdown-center flex">
@@ -127,6 +124,7 @@
                             </li>
                             <li class="text-error">
                                 <a hx-post="{% url 'signout' %}"
+                                   hx-boost="false"
                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
                                     <i class="ph ph-sign-out text-lg" aria-hidden="true"></i>
                                     Sair
