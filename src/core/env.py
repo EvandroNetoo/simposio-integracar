@@ -1,13 +1,14 @@
 from pathlib import Path
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class EnvSettings(BaseSettings):
-    class ConfigDict:
-        env_file = str(Path(__file__).parent.parent.parent / '.env')
-        env_file_encoding = 'utf-8'
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=Path(__file__).parent.parent.parent / '.env',
+        env_file_encoding='utf-8',
+        case_sensitive=True,
+    )
 
     # Core Settings
     SECRET_KEY: str = 'change-me-in-production'  # noqa: S105

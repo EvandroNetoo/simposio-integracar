@@ -1,3 +1,5 @@
+from threading import Thread
+
 from django import forms
 from django.contrib.auth.forms import (
     AuthenticationForm,
@@ -200,6 +202,29 @@ class CustomPasswordChangeForm(NoRequiredAttrFormMixin, PasswordChangeForm):
 
 
 class CustomPasswordResetForm(NoRequiredAttrFormMixin, PasswordResetForm):
+    def send_mail(
+        self,
+        subject_template_name,
+        email_template_name,
+        context,
+        from_email,
+        to_email,
+        html_email_template_name=None,
+    ):
+        thread = Thread(
+            target=super().send_mail,
+            args=(
+                subject_template_name,
+                email_template_name,
+                context,
+                from_email,
+                to_email,
+                html_email_template_name,
+            ),
+            daemon=True,
+        )
+        thread.start()
+
     def clean_email(self):
         email = self.cleaned_data.get('email', '')
         return email.lower()

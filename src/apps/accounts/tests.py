@@ -1,3 +1,5 @@
+from time import sleep
+
 from django.core import mail
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -38,5 +40,9 @@ class PasswordResetTestCase(TestCase):
         )
 
         self.assertRedirects(response, reverse('password_reset_done'))
+        for _ in range(10):
+            if mail.outbox:
+                break
+            sleep(0.05)
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn(self.user.email, mail.outbox[0].to)
