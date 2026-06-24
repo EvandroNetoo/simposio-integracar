@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('papers', '0005_alter_coauthor_email_alter_coauthor_name_and_more'),
+        ('papers', '0008_mark_existing_papers_submitted'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -18,10 +18,18 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='coauthor',
-            constraint=models.UniqueConstraint(condition=models.Q(('user__isnull', False)), fields=('paper', 'user'), name='uniq_coauthor_paper_user'),
+            constraint=models.UniqueConstraint(
+                condition=models.Q(('user__isnull', False)),
+                fields=('paper', 'user'),
+                name='uniq_coauthor_paper_user',
+            ),
         ),
         migrations.AddConstraint(
             model_name='coauthor',
-            constraint=models.UniqueConstraint(condition=models.Q(('user__isnull', True)), fields=('paper', 'email'), name='uniq_coauthor_paper_email'),
+            constraint=models.UniqueConstraint(
+                condition=models.Q(('user__isnull', True)),
+                fields=('paper', 'email'),
+                name='uniq_coauthor_paper_email',
+            ),
         ),
     ]
