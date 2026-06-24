@@ -382,6 +382,14 @@ class ReviewFlowTestCase(TestCase):
             {self.owner.email, self.event.contact_email},
         )
         self.assertIn(self.paper.title, mail.outbox[0].body)
+        assignment_url = reverse(
+            'paper_assignment_manage',
+            args=[self.paper.pk],
+        )
+        self.assertIn(assignment_url, mail.outbox[0].body)
+
+        self.client.force_login(self.owner)
+        self.assertEqual(self.client.get(assignment_url).status_code, 200)
 
     def test_committee_and_review_views_enforce_roles(self):
         self.client.force_login(self.outsider)

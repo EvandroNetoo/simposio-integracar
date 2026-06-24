@@ -108,7 +108,11 @@ def notify_final_decision_published(request, decision):
 def notify_submission_received(request, submission, *, correction=False):
     paper = submission.paper
     event = paper.event
-    paper_url = _absolute_url(request, 'paper_detail', pk=paper.pk)
+    paper_url = _absolute_url(
+        request,
+        'paper_assignment_manage',
+        paper_pk=paper.pk,
+    )
     kind = 'correcao enviada' if correction else 'nova submissao'
     _send_after_commit(
         f'{kind.title()} - {event.name}',
