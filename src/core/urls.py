@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import include, path
+from django.views.static import serve
 
 urlpatterns = [
     path(
@@ -19,6 +20,11 @@ urlpatterns = [
     path('', include('events.urls')),
     path('', include('papers.urls')),
     path('', include('reviews.urls')),
+    path(
+        f'{settings.MEDIA_URL.lstrip("/")}<path:path>',
+        serve,
+        {'document_root': settings.MEDIA_ROOT},
+    ),
 ]
 
 if settings.DEBUG and 'test' not in sys.argv:
