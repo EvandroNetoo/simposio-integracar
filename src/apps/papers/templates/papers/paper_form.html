@@ -70,7 +70,8 @@
 
                     <div class="space-y-5"
                          data-coauthor-formset
-                         data-prefix="{{ coauthor_formset.prefix }}">
+                         data-prefix="{{ coauthor_formset.prefix }}"
+                         data-max-coauthors="{{ coauthor_formset.max_num }}">
                         {{ coauthor_formset.management_form }}
 
                         <div class="rounded-lg border border-base-300 bg-base-200/50 p-4">
@@ -78,7 +79,7 @@
                                 <div class="space-y-1">
                                     <p class="text-base font-semibold">Autores do trabalho</p>
                                     <p class="text-sm text-base-content/70">
-                                        O autor principal ja esta incluido. Adicione coautores cadastrados no sistema ou preencha os dados manualmente.
+                                        O autor principal ja esta incluido. Adicione ate {{ coauthor_formset.max_num }} coautores cadastrados no sistema ou preencha os dados manualmente.
                                     </p>
                                 </div>
                                 <button type="button" class="btn btn-secondary gap-2" data-coauthor-add>
@@ -95,7 +96,7 @@
                             </div>
                             <p class="text-sm font-medium">Nenhum coautor adicionado</p>
                             <p class="mt-1 text-xs text-base-content/60">
-                                Se o trabalho tiver coautores, comece pelo botao abaixo.
+                                Se o trabalho tiver coautores, comece pelo botao abaixo. Limite de {{ coauthor_formset.max_num }} coautores por trabalho.
                             </p>
                             <button type="button"
                                     class="btn btn-secondary btn-sm mt-4 gap-2"
@@ -216,7 +217,11 @@
                         </div>
 
                         <p class="text-xs text-base-content/60">
-                            Você poderá alterar os coautores depois do envio.
+                            Você poderá alterar os coautores depois do envio, respeitando o limite de {{ coauthor_formset.max_num }} coautores.
+                        </p>
+
+                        <p class="hidden text-xs font-medium text-warning" data-coauthor-limit-message>
+                            Limite de {{ coauthor_formset.max_num }} coautores atingido.
                         </p>
 
                         <div class="gov-surface"
@@ -367,6 +372,14 @@
                 orderContainer.querySelector('[data-author-order-empty]') :
                 null;
             const mainAuthor = orderContainer ? orderContainer.dataset.mainAuthor : '';
+            const maxCoauthors = parseInt(
+                formsetRoot.dataset.maxCoauthors,
+                10
+            );
+            const addButtons = formsetRoot.querySelectorAll('[data-coauthor-add]');
+            const limitMessage = formsetRoot.querySelector(
+                '[data-coauthor-limit-message]'
+            );
             let sortableInstance = null;
 
             if (!totalInput) {
@@ -546,18 +559,37 @@
                 });
             }
 
-            function updateTitles() {
-                const rows = Array.from(
+            function getActiveRows() {
+                return Array.from(
                     list.querySelectorAll('[data-coauthor-row]')
                 ).filter((row) => {
                     const deleteInput = row.querySelector('input[name$="-DELETE"]');
                     return !row.classList.contains('hidden') &&
                         !(deleteInput && deleteInput.checked);
                 });
+            }
+
+            function updateAddButtons(activeCount) {
+                const limitReached = Number.isInteger(maxCoauthors) &&
+                    activeCount >= maxCoauthors;
+
+                addButtons.forEach((button) => {
+                    button.disabled = limitReached;
+                });
+
+                if (limitMessage) {
+                    limitMessage.classList.toggle('hidden', !limitReached);
+                }
+            }
+
+            function updateTitles() {
+                const rows = getActiveRows();
 
                 if (emptyState) {
                     emptyState.classList.toggle('hidden', rows.length > 0);
                 }
+
+                updateAddButtons(rows.length);
 
                 rows.forEach((row, index) => {
                     const label = row.querySelector('[data-coauthor-title]');
@@ -700,6 +732,13 @@
                 if (!template) {
                     return;
                 }
+                if (
+                    Number.isInteger(maxCoauthors) &&
+                    getActiveRows().length >= maxCoauthors
+                ) {
+                    updateAddButtons(maxCoauthors);
+                    return;
+                }
                 const index = parseInt(totalInput.value, 10);
                 const html = template.innerHTML.replace(/__prefix__/g, index);
                 const wrapper = document.createElement('div');
@@ -721,7 +760,7 @@
             window.coauthorForm = window.coauthorForm || {};
             window.coauthorForm.addRow = addRow;
 
-            formsetRoot.querySelectorAll('[data-coauthor-add]').forEach((button) => {
+            addButtons.forEach((button) => {
                 button.addEventListener('click', addRow);
             });
         })();

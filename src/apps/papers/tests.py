@@ -7,7 +7,7 @@ from django.utils import timezone
 from events.forms import EixoTematicoFormSet
 from events.models import EixoTematico, Event
 
-from papers.forms import PaperForm
+from papers.forms import MAX_COAUTHORS, CoauthorFormSet, PaperForm
 from papers.models import Coauthor, Paper
 
 
@@ -226,6 +226,43 @@ class EixoTematicoTestCase(TestCase):
         updated_paper = form.save()
         self.assertEqual(updated_paper.eixo_tematico, second_eixo)
 
+    def test_coauthor_formset_rejects_more_than_seven_coauthors(self):
+        event = self.create_event()
+        eixo = EixoTematico.objects.create(event=event, name='Educação')
+        paper = Paper.objects.create(
+            user=self.user,
+            event=event,
+            eixo_tematico=eixo,
+            title='Trabalho',
+            abstract='Resumo',
+        )
+        total_forms = MAX_COAUTHORS + 1
+        data = {
+            'coauthors-TOTAL_FORMS': str(total_forms),
+            'coauthors-INITIAL_FORMS': '0',
+            'coauthors-MIN_NUM_FORMS': '0',
+            'coauthors-MAX_NUM_FORMS': str(MAX_COAUTHORS),
+        }
+        for index in range(total_forms):
+            data[f'coauthors-{index}-user'] = ''
+            data[f'coauthors-{index}-name'] = f'Coautor {index}'
+            data[f'coauthors-{index}-email'] = (
+                f'coautor-{index}@example.com'
+            )
+            data[f'coauthors-{index}-institution'] = 'Instituição'
+            data[f'coauthors-{index}-affiliation_type'] = (
+                Coauthor.AffiliationType.OTHER
+            )
+            data[f'coauthors-{index}-authorship_order'] = str(index + 2)
+
+        formset = CoauthorFormSet(data, instance=paper, prefix='coauthors')
+
+        self.assertFalse(formset.is_valid())
+        self.assertIn(
+            'Cadastre no máximo 7 coautores por trabalho.',
+            formset.non_form_errors(),
+        )
+
     def test_paper_update_saves_user_and_manual_coauthors_in_order(self):
         self.client.force_login(self.user)
         event = self.create_event()
@@ -252,7 +289,7 @@ class EixoTematicoTestCase(TestCase):
                 'coauthors-TOTAL_FORMS': '2',
                 'coauthors-INITIAL_FORMS': '0',
                 'coauthors-MIN_NUM_FORMS': '0',
-                'coauthors-MAX_NUM_FORMS': '1000',
+                'coauthors-MAX_NUM_FORMS': str(MAX_COAUTHORS),
                 'coauthors-0-user': coauthor_user.pk,
                 'coauthors-0-name': '',
                 'coauthors-0-email': '',
@@ -307,7 +344,7 @@ class EixoTematicoTestCase(TestCase):
                 'coauthors-TOTAL_FORMS': '2',
                 'coauthors-INITIAL_FORMS': '0',
                 'coauthors-MIN_NUM_FORMS': '0',
-                'coauthors-MAX_NUM_FORMS': '1000',
+                'coauthors-MAX_NUM_FORMS': str(MAX_COAUTHORS),
                 'coauthors-0-user': first_coauthor.pk,
                 'coauthors-0-name': '',
                 'coauthors-0-email': '',

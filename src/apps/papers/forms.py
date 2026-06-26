@@ -8,6 +8,9 @@ from core.mixins import NoRequiredAttrFormMixin
 from papers.models import Coauthor, Paper, Submission
 
 
+MAX_COAUTHORS = 7
+
+
 class PaperForm(NoRequiredAttrFormMixin, forms.ModelForm):
     class Meta:
         model = Paper
@@ -69,6 +72,13 @@ class CoauthorForm(NoRequiredAttrFormMixin, forms.ModelForm):
 
 
 class BaseCoauthorFormSet(BaseInlineFormSet):
+    default_error_messages = {
+        **BaseInlineFormSet.default_error_messages,
+        'too_many_forms': (
+            f'Cadastre no máximo {MAX_COAUTHORS} coautores por trabalho.'
+        ),
+    }
+
     def clean(self):
         super().clean()
         if any(self.errors):
@@ -105,6 +115,8 @@ CoauthorFormSet = inlineformset_factory(
     form=CoauthorForm,
     formset=BaseCoauthorFormSet,
     extra=0,
+    max_num=MAX_COAUTHORS,
+    validate_max=True,
     can_delete=True,
 )
 
